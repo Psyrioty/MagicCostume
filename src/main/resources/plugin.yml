@@ -1,0 +1,13 @@
+name: MagicCostume
+version: '${version}'
+
+main: org.psyrioty.magicCostume.MagicCostume
+api-version: '1.21.11'
+load: POSTWORLD
+
+commands:
+  magiccostume:
+    description: MagicCostume plugin commands
+    usage: /magiccostume
+    permission: magiccostume.admin
+    permission-message: "Not permission"
