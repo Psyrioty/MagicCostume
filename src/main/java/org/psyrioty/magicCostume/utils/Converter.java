@@ -109,12 +109,42 @@ public class Converter {
             }
             List<JsonObject> keyframeList = getObjects(keyframes);
             for(JsonObject jsonKeyframe: keyframeList) {
-                Bukkit.getLogger().info(jsonKeyframe.toString());
+                getAnimationKey(jsonKeyframe);
             }
 
             return animationKeys;
         }catch (Exception exception){
             Bukkit.getLogger().info("MagicCostume error Converter.java getAnimationKeys() " + exception.getMessage());
+        }
+        return null;
+    }
+
+    private static AnimationKey getAnimationKey(JsonObject jsonObject){
+        try {
+            String channel = jsonObject.get("channel").getAsString();
+            float timeFloat = jsonObject.get("time").getAsFloat();
+            timeFloat = timeFloat * 20;
+            int time = Math.round(timeFloat);
+
+            Bukkit.getLogger().info(channel);
+            Bukkit.getLogger().info(time + "");
+
+            //{
+            //    "channel": "rotation",
+            //        "data_points": [
+            //            {
+            //                "x": "0",
+            //                    "y": "-36.1726424309",
+            //                    "z": "0"
+            //            }
+            //        ],
+            //    "uuid": "fd1088ed-5003-a724-63d1-f0256daf55cb",
+            //    "time": 0,
+            //    "color": -1,
+            //    "interpolation": "catmullrom"
+            //}
+        }catch (Exception exception){
+            Bukkit.getLogger().severe("MagicCostume error Converter.java getAnimationKey() " + exception.getMessage());
         }
         return null;
     }
