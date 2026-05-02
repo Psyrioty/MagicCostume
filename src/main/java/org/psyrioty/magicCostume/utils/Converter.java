@@ -5,6 +5,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.bukkit.Bukkit;
 import org.psyrioty.magicCostume.MagicCostume;
+import org.psyrioty.magicCostume.Objects.Animations.Animation;
+import org.psyrioty.magicCostume.Objects.Animations.AnimationController;
+import org.psyrioty.magicCostume.Objects.Animations.AnimationKey;
+import org.psyrioty.magicCostume.Objects.Animations.AnimationLine;
 import org.psyrioty.magicCostume.Objects.BBModel.Outliner;
 import org.psyrioty.magicCostume.Objects.Bone;
 import org.psyrioty.magicCostume.Objects.Costume;
@@ -24,13 +28,95 @@ public class Converter {
         List<File> modelFiles = getAllBbModels();
         for(File modelFile: modelFiles){
             try {
-                List<Bone> bones = getBones(modelFile);
-                Costume costume = getCostume(modelFile, bones);
+                //############## создание модели #####################
+                List<Bone> bones = getBones(modelFile); // создание костей
+                Costume costume = getCostume(modelFile, bones); //создание модели
                 MagicCostume.getPlugin().getCostumes().add(costume);
+                AnimationController animationController = createAnimationController(modelFile, bones); //создание анимаций
+                //####################################################
             }catch (Exception exception){
                 Bukkit.getLogger().severe("MagicCostume error Converter.java ConvertBBModelsToResourcePack() " + exception.getMessage());
             }
         }
+    }
+
+    private static AnimationController createAnimationController(File modelFile, List<Bone> bones){
+        try {
+            List<Animation> animations = getAnimations(modelFile, bones);
+        }catch (Exception exception){
+            Bukkit.getLogger().severe("MagicCostume error Converter.java createAnimationController() " + exception.getMessage());
+        }
+        return null;
+    }
+
+    private static List<Animation> getAnimations(File modelFile, List<Bone> bones){
+        try {
+            List<Animation> animationList = new ArrayList<>();
+            String jsonAnimations = getKeyValue(modelFile, "animations");
+            if(jsonAnimations == null){
+                return null;
+            }
+            List<JsonObject> jsonAnimationList = getObjects(jsonAnimations);
+            for(JsonObject jsonAnimation: jsonAnimationList){
+                String name = getKeyValue(String.valueOf(jsonAnimation), "name");
+                String uuidString = getKeyValue(String.valueOf(jsonAnimation), "uuid");
+                uuidString = uuidString.replace("\"", "");
+                String loopString = getKeyValue(String.valueOf(jsonAnimation), "loop");
+                boolean loop = false;
+                if(loopString.equals("loop")){
+                    loop = true;
+                }
+
+                List<AnimationLine> animationLines = getAnimationLines(jsonAnimation);
+            }
+
+            return animationList;
+        }catch (Exception e){
+            Bukkit.getLogger().severe("MagicCostume error Converter.java getAnimations() " + e.getMessage());
+        }
+        return null;
+    }
+
+    private static List<AnimationLine> getAnimationLines(JsonObject jsonObject){
+        try {
+            List<AnimationLine> animationLines = new ArrayList<>();
+            String jsonAnimators = getKeyValue(jsonObject.toString(), "animators");
+            Map<String, JsonObject> jsonAnimatorMap = getObjectsWithKeys(jsonAnimators);
+            for(String uuidString: jsonAnimatorMap.keySet()){
+                if(uuidString.equals("effects")){
+
+                    continue;
+                }
+
+                JsonObject jsonObjectAnimator =  jsonAnimatorMap.get(uuidString);
+
+                List<AnimationKey> animationKeys = getAnimationKeys(jsonObjectAnimator);
+            }
+            return animationLines;
+        }catch (Exception e){
+            Bukkit.getLogger().severe("MagicCostume error Converter.java getAnimationLines() " + e.getMessage());
+        }
+        return null;
+    }
+
+    private static List<AnimationKey> getAnimationKeys(JsonObject jsonObject){
+        try {
+            List<AnimationKey> animationKeys = new ArrayList<>();
+
+            String keyframes = getKeyValue(String.valueOf(jsonObject), "keyframes");
+            if(keyframes == null){
+                return null;
+            }
+            List<JsonObject> keyframeList = getObjects(keyframes);
+            for(JsonObject jsonKeyframe: keyframeList) {
+                Bukkit.getLogger().info(jsonKeyframe.toString());
+            }
+
+            return animationKeys;
+        }catch (Exception exception){
+            Bukkit.getLogger().info("MagicCostume error Converter.java getAnimationKeys() " + exception.getMessage());
+        }
+        return null;
     }
 
     private static List<Bone> getBones(File modelFile){
@@ -259,6 +345,28 @@ public class Converter {
         }
 
         return list;
+    }
+
+    private static Map<String, JsonObject> getObjectsWithKeys(String jsonString) {
+        Map<String, JsonObject> map = new LinkedHashMap<>();
+
+        try {
+            JsonElement root = JsonParser.parseString(jsonString);
+
+            if (root.isJsonObject()) {
+                JsonObject rootObject = root.getAsJsonObject();
+
+                for (Map.Entry<String, JsonElement> entry : rootObject.entrySet()) {
+                    if (entry.getValue().isJsonObject()) {
+                        map.put(entry.getKey(), entry.getValue().getAsJsonObject());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return map;
     }
     //###################################################################################
     //###################################################################################

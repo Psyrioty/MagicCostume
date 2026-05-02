@@ -8,13 +8,16 @@ public class Animation {
     String name; //название анимации
     UUID uuid;
     List<AnimationLine> animationLines = new ArrayList<>();
+    boolean loop; //true - зациклен, false - запуск один раз
 
     public Animation(
             String name,
-            UUID uuid
+            UUID uuid,
+            boolean loop
     ){
         this.name = name;
         this.uuid = uuid;
+        this.loop = loop;
     }
 
     public String getName() {
