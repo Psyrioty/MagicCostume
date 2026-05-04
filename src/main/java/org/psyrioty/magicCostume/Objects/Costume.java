@@ -25,4 +25,12 @@ public class Costume {
     public String getName() {
         return name;
     }
+
+    public void setAnimationController(AnimationController animationController) {
+        this.animationController = animationController;
+    }
+
+    public AnimationController getAnimationController() {
+        return animationController;
+    }
 }

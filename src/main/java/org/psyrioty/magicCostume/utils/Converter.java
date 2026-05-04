@@ -30,9 +30,18 @@ public class Converter {
             try {
                 //############## создание модели #####################
                 List<Bone> bones = getBones(modelFile); // создание костей
+
                 Costume costume = getCostume(modelFile, bones); //создание модели
+                if(costume == null){
+                    continue;
+                }
+
                 MagicCostume.getPlugin().getCostumes().add(costume);
+
                 AnimationController animationController = createAnimationController(modelFile, bones); //создание анимаций
+                if(animationController != null) {
+                    costume.setAnimationController(animationController);
+                }
                 //####################################################
             }catch (Exception exception){
                 Bukkit.getLogger().severe("MagicCostume error Converter.java ConvertBBModelsToResourcePack() " + exception.getMessage());
@@ -43,6 +52,16 @@ public class Converter {
     private static AnimationController createAnimationController(File modelFile, List<Bone> bones){
         try {
             List<Animation> animations = getAnimations(modelFile, bones);
+
+            if(animations == null){
+                return null;
+            }
+
+            AnimationController animationController = new AnimationController(
+                    animations
+            );
+
+            return animationController;
         }catch (Exception exception){
             Bukkit.getLogger().severe("MagicCostume error Converter.java createAnimationController() " + exception.getMessage());
         }
@@ -59,15 +78,32 @@ public class Converter {
             List<JsonObject> jsonAnimationList = getObjects(jsonAnimations);
             for(JsonObject jsonAnimation: jsonAnimationList){
                 String name = getKeyValue(String.valueOf(jsonAnimation), "name");
+                name = name.replace("\"", "");
                 String uuidString = getKeyValue(String.valueOf(jsonAnimation), "uuid");
                 uuidString = uuidString.replace("\"", "");
+                UUID uuid = UUID.fromString(uuidString);
+                int length = (int) (jsonAnimation.get("length").getAsFloat() * 20);
+
                 String loopString = getKeyValue(String.valueOf(jsonAnimation), "loop");
                 boolean loop = false;
                 if(loopString.equals("loop")){
                     loop = true;
                 }
 
-                List<AnimationLine> animationLines = getAnimationLines(jsonAnimation);
+                List<AnimationLine> animationLines = getAnimationLines(jsonAnimation, bones);
+
+                if(animationLines == null){
+                    continue;
+                }
+
+                Animation animation = new Animation(
+                        name,
+                        uuid,
+                        loop,
+                        animationLines,
+                        length
+                );
+                animationList.add(animation);
             }
 
             return animationList;
@@ -77,25 +113,57 @@ public class Converter {
         return null;
     }
 
-    private static List<AnimationLine> getAnimationLines(JsonObject jsonObject){
+    private static List<AnimationLine> getAnimationLines(JsonObject jsonObject, List<Bone> bones){
         try {
             List<AnimationLine> animationLines = new ArrayList<>();
             String jsonAnimators = getKeyValue(jsonObject.toString(), "animators");
             Map<String, JsonObject> jsonAnimatorMap = getObjectsWithKeys(jsonAnimators);
             for(String uuidString: jsonAnimatorMap.keySet()){
                 if(uuidString.equals("effects")){
-
                     continue;
                 }
 
                 JsonObject jsonObjectAnimator =  jsonAnimatorMap.get(uuidString);
 
                 List<AnimationKey> animationKeys = getAnimationKeys(jsonObjectAnimator);
+                if(animationKeys == null){
+                    continue;
+                }
+
+                UUID uuid = UUID.fromString(uuidString);
+
+                /*Bone bone = getBoneForUUID(UUID.fromString(uuidString), bones);
+
+                if(bone == null){
+                    continue;
+                }*/
+
+                AnimationLine animationLine = new AnimationLine(
+                    uuid,
+                    animationKeys
+                );
+
+                animationLines.add(animationLine);
+
             }
             return animationLines;
         }catch (Exception e){
             Bukkit.getLogger().severe("MagicCostume error Converter.java getAnimationLines() " + e.getMessage());
         }
+        return null;
+    }
+
+    private static Bone findBoneForUUID(UUID uuid, List<Bone> bones){
+        if(uuid == null || bones == null){
+            return null;
+        }
+
+        for(Bone bone: bones){
+            if(bone.getUuid().equals(uuid)){
+                return bone;
+            }
+        }
+
         return null;
     }
 
@@ -109,12 +177,15 @@ public class Converter {
             }
             List<JsonObject> keyframeList = getObjects(keyframes);
             for(JsonObject jsonKeyframe: keyframeList) {
-                getAnimationKey(jsonKeyframe);
+                AnimationKey animationKey = getAnimationKey(jsonKeyframe);
+                if(animationKey != null){
+                    animationKeys.add(animationKey);
+                }
             }
 
             return animationKeys;
         }catch (Exception exception){
-            Bukkit.getLogger().info("MagicCostume error Converter.java getAnimationKeys() " + exception.getMessage());
+            Bukkit.getLogger().severe("MagicCostume error Converter.java getAnimationKeys() " + exception.getMessage());
         }
         return null;
     }
@@ -126,8 +197,32 @@ public class Converter {
             timeFloat = timeFloat * 20;
             int time = Math.round(timeFloat);
 
-            Bukkit.getLogger().info(channel);
-            Bukkit.getLogger().info(time + "");
+            //Bukkit.getLogger().info(channel);
+            //Bukkit.getLogger().info(time + "");
+
+            String dataPointsString = getKeyValue(jsonObject.toString(), "data_points");
+            if(dataPointsString == null){
+                return null;
+            }
+
+            float x = 0;
+            float y = 0;
+            float z = 0;
+
+            List<JsonObject> dataPoints = getObjects(dataPointsString);
+            for(JsonObject dataPoint: dataPoints){
+                x = dataPoint.get("x").getAsFloat();
+                y = dataPoint.get("y").getAsFloat();
+                z = dataPoint.get("z").getAsFloat();
+            }
+
+            return new AnimationKey(
+                    time,
+                    x,
+                    y,
+                    z,
+                    channel
+            );
 
             //{
             //    "channel": "rotation",
@@ -224,7 +319,9 @@ public class Converter {
                 }
                 for(Outliner outlinerChild: childOutliners){
                     Bone childBone = getBoneForUUID(outlinerChild.getUuid(), bones);
-                    headBone.addChildBone(childBone);
+                    if(headBone != null) {
+                        headBone.addChildBone(childBone);
+                    }
                 }
 
                 setChildBones(bones, childOutliners, null);

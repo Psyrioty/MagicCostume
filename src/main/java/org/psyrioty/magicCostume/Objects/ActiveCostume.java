@@ -2,6 +2,7 @@ package org.psyrioty.magicCostume.Objects;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
+import org.psyrioty.magicCostume.MagicCostume;
 import org.psyrioty.magicCostume.Objects.Animations.Animation;
 import org.psyrioty.magicCostume.Objects.Animations.AnimationController;
 
@@ -19,8 +20,11 @@ public class ActiveCostume {
     ){
         this.target = target;
         getHeadBones(costume.getHeadBones(), null);
+        this.animationController = costume.getAnimationController();
 
         Spawn();
+
+        MagicCostume.getPlugin().getActiveCostumes().add(this);
     }
 
     private void getHeadBones(List<Bone> bones, Bone headBone){
@@ -64,5 +68,9 @@ public class ActiveCostume {
         }catch (Exception exception){
             Bukkit.getLogger().severe("MagicCostume error ActiveCostume.java spawnBone() " + exception.getMessage());
         }
+    }
+
+    public void animationTick(){
+        animationController.animationTick(headBones);
     }
 }

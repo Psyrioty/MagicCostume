@@ -4,31 +4,41 @@ import org.psyrioty.magicCostume.Objects.Bone;
 
 public class AnimationKey {
     int tick; //это типо время будет, на котором метка
-    Bone bone; //кость, для которой сделана метка
-    float rotationX, rotationY, rotationZ; //ротация
-    float scaleX, scaleY, scaleZ; //скэйл
-    float translateX, translateY, translateZ; //смещение/позиция
+    //Bone bone; //кость, для которой сделана метка
+    float x, y, z; //координаты ключа для scale/rotation/postion
+    String typeKey; //тип ключа, "position", "rotation", "scale"
 
     public AnimationKey(
             int tick,
-            Bone bone,
-            float rotationX, float rotationY, float rotationZ,
-            float scaleX, float scaleY, float scaleZ,
-            float translateX, float translateY, float translateZ
+            float x, float y, float z,
+            String typeKey
     ){
         this.tick = tick;
-        this.bone = bone;
 
-        this.rotationX = rotationX;
-        this.rotationY = rotationY;
-        this.rotationZ = rotationZ;
+        this.x = x;
+        this.y = y;
+        this.z = z;
 
-        this.scaleX = scaleX;
-        this.scaleY = scaleY;
-        this.scaleZ = scaleZ;
+        this.typeKey = typeKey;
+    }
 
-        this.translateX = translateX;
-        this.translateY = translateY;
-        this.translateZ = translateZ;
+    public int getTick() {
+        return tick;
+    }
+
+    public float getX() {
+        return x;
+    }
+
+    public float getY() {
+        return y;
+    }
+
+    public float getZ() {
+        return z;
+    }
+
+    public String getTypeKey() {
+        return typeKey;
     }
 }
