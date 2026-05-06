@@ -1,5 +1,6 @@
 package org.psyrioty.magicCostume.utils;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -12,6 +13,7 @@ import org.psyrioty.magicCostume.Objects.Animations.AnimationLine;
 import org.psyrioty.magicCostume.Objects.BBModel.Outliner;
 import org.psyrioty.magicCostume.Objects.Bone;
 import org.psyrioty.magicCostume.Objects.Costume;
+import org.psyrioty.magicCostume.Objects.ResourcePack.Element;
 
 import java.io.File;
 import java.io.FileReader;
@@ -47,6 +49,105 @@ public class Converter {
                 Bukkit.getLogger().severe("MagicCostume error Converter.java ConvertBBModelsToResourcePack() " + exception.getMessage());
             }
         }
+    }
+
+    private static List<Element> getAllBBModelElements(File modelFile){
+        try {
+            String jsonElements = getKeyValue(modelFile, "elements");
+            List<JsonObject> jsonElementList = getObjects(jsonElements);
+            for(JsonObject jsonElement: jsonElementList){
+                if(!jsonElement.get("type").getAsString().equals("cube")){
+                    continue;
+                }
+
+                String name = jsonElement.get("name").getAsString();
+
+                List<Float> from = new ArrayList<>();
+                JsonArray jsonArrayFrom = jsonElement.get("from").getAsJsonArray();
+                from.add(jsonArrayFrom.get(0).getAsFloat());
+                from.add(jsonArrayFrom.get(1).getAsFloat());
+                from.add(jsonArrayFrom.get(2).getAsFloat());
+
+                List<Float> to = new ArrayList<>();
+                JsonArray jsonArrayTo = jsonElement.get("to").getAsJsonArray();
+                to.add(jsonArrayTo.get(0).getAsFloat());
+                to.add(jsonArrayTo.get(1).getAsFloat());
+                to.add(jsonArrayTo.get(2).getAsFloat());
+
+                JsonArray jsonArrayOrigin = jsonElement.get("origin").getAsJsonArray();
+                List<Float> origin = new ArrayList<>();
+                origin.add(jsonArrayOrigin.get(0).getAsFloat());
+                origin.add(jsonArrayOrigin.get(1).getAsFloat());
+                origin.add(jsonArrayOrigin.get(2).getAsFloat());
+
+                JsonArray jsonArrayRotation = jsonElement.get("rotation").getAsJsonArray();
+
+                float rotationX = jsonArrayRotation.get(0).getAsFloat();
+                float rotationY = jsonArrayRotation.get(1).getAsFloat();
+                float rotationZ = jsonArrayRotation.get(2).getAsFloat();
+
+                JsonObject faces = jsonElement.get("faces").getAsJsonObject();
+                List<Float> northFaces = new ArrayList<>();
+                JsonObject northFaceJson = faces.get("north").getAsJsonObject();
+                JsonArray jsonArrayNorth = northFaceJson.get("uv").getAsJsonArray();
+                northFaces.add(jsonArrayNorth.get(0).getAsFloat());
+                northFaces.add(jsonArrayNorth.get(1).getAsFloat());
+                northFaces.add(jsonArrayNorth.get(2).getAsFloat());
+                northFaces.add(jsonArrayNorth.get(3).getAsFloat());
+                String textureNameNorth = "#" + northFaceJson.get("texture").getAsInt();
+
+                List<Float> eastFaces = new ArrayList<>();
+                JsonObject eastFaceJson = faces.get("east").getAsJsonObject();
+                JsonArray jsonArrayEast = eastFaceJson.get("uv").getAsJsonArray();
+                eastFaces.add(jsonArrayEast.get(0).getAsFloat());
+                eastFaces.add(jsonArrayEast.get(1).getAsFloat());
+                eastFaces.add(jsonArrayEast.get(2).getAsFloat());
+                eastFaces.add(jsonArrayEast.get(3).getAsFloat());
+                String textureNameEast = "#" + northFaceJson.get("texture").getAsInt();
+
+                List<Float> southFaces = new ArrayList<>();
+                JsonObject southFaceJson = faces.get("south").getAsJsonObject();
+                JsonArray jsonArraySouth = southFaceJson.get("uv").getAsJsonArray();
+                southFaces.add(jsonArraySouth.get(0).getAsFloat());
+                southFaces.add(jsonArraySouth.get(1).getAsFloat());
+                southFaces.add(jsonArraySouth.get(2).getAsFloat());
+                southFaces.add(jsonArraySouth.get(3).getAsFloat());
+                String textureNameSouth = "#" + northFaceJson.get("texture").getAsInt();
+
+                List<Float> westFaces = new ArrayList<>();
+                JsonObject westFaceJson = faces.get("west").getAsJsonObject();
+                JsonArray jsonArrayWest = westFaceJson.get("uv").getAsJsonArray();
+                westFaces.add(jsonArrayWest.get(0).getAsFloat());
+                westFaces.add(jsonArrayWest.get(1).getAsFloat());
+                westFaces.add(jsonArrayWest.get(2).getAsFloat());
+                westFaces.add(jsonArrayWest.get(3).getAsFloat());
+                String textureNameWest = "#" + northFaceJson.get("texture").getAsInt();
+
+                List<Float> upFaces = new ArrayList<>();
+                JsonObject upFaceJson = faces.get("up").getAsJsonObject();
+                JsonArray jsonArrayUp = upFaceJson.get("uv").getAsJsonArray();
+                upFaces.add(jsonArrayUp.get(0).getAsFloat());
+                upFaces.add(jsonArrayUp.get(1).getAsFloat());
+                upFaces.add(jsonArrayUp.get(2).getAsFloat());
+                upFaces.add(jsonArrayUp.get(3).getAsFloat());
+                String textureNameUp = "#" + northFaceJson.get("texture").getAsInt();
+
+                List<Float> downFaces = new ArrayList<>();
+                JsonObject downFaceJson = faces.get("down").getAsJsonObject();
+                JsonArray jsonArrayDown = downFaceJson.get("uv").getAsJsonArray();
+                downFaces.add(jsonArrayDown.get(0).getAsFloat());
+                downFaces.add(jsonArrayDown.get(1).getAsFloat());
+                downFaces.add(jsonArrayDown.get(2).getAsFloat());
+                downFaces.add(jsonArrayDown.get(3).getAsFloat());
+                String textureNameDown = "#" + northFaceJson.get("texture").getAsInt();
+
+
+            }
+
+        }catch (Exception exception){
+            Bukkit.getLogger().severe("MagicCostume error Converter.java getAllBBModelElements() " + exception.getMessage());
+        }
+        return null;
     }
 
     private static AnimationController createAnimationController(File modelFile, List<Bone> bones){
@@ -257,7 +358,6 @@ public class Converter {
                 String uuidString = getKeyValue(String.valueOf(jsonGroup), "uuid");
                 uuidString = uuidString.replace("\"", "");
                 UUID uuid = UUID.fromString(uuidString);
-
 
                 Bone bone = new Bone(
                         origins.get(0) / 16,

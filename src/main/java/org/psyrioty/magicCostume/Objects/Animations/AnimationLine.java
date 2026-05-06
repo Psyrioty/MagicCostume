@@ -177,6 +177,11 @@ public class AnimationLine {
         ItemDisplay boneEntity = bone.getBoneEntity();
         Transformation transformation = boneEntity.getTransformation();
         Vector3f translation = transformation.getTranslation();
+        //float tx = translation.x;
+        //float ty = translation.y;
+        //float tz = translation.z;
+        //double length = Math.sqrt(((0 - tx) * (0 - tx)) + ((0 - ty) * (0 - ty)) + ((0 - tz) * (0 - tz)));
+        //Vector3f translationNew =
         Vector3f scale = transformation.getScale();
         Quaternionf rightRotation = transformation.getRightRotation();
 

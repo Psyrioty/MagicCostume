@@ -21,6 +21,7 @@ public class Bone {
     String name; //имя кости
     UUID uuid; //идентификатор кости
     ItemDisplay boneEntity;
+    Bone headBone;
 
     public Bone(
             float originX,
@@ -88,7 +89,7 @@ public class Bone {
         Location location = target.getLocation();
         location.setPitch(0);
 
-        ItemStack itemStack = new ItemStack(Material.DIAMOND);
+        ItemStack itemStack = new ItemStack(Material.PURPLE_WOOL);
 
         ItemDisplay display = world.spawn(location, ItemDisplay.class, entity -> {
             entity.setItemStack(itemStack);
