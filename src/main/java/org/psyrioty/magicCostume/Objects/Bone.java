@@ -9,6 +9,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Transformation;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
+import org.psyrioty.magicCostume.Objects.ResourcePack.Group;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +24,8 @@ public class Bone {
     ItemDisplay boneEntity;
     Bone headBone;
 
+    Group group; //для формирования ресурспаков
+
     public Bone(
             float originX,
             float originY,
@@ -34,7 +37,9 @@ public class Bone {
 
             String name,
 
-            UUID uuid
+            UUID uuid,
+
+            Group group
     ){
         this.originX = originX;
         this.originY = originY;
@@ -47,6 +52,8 @@ public class Bone {
         this.name = name;
 
         this.uuid = uuid;
+
+        this.group = group;
     }
 
     public void addChildBone(Bone bone){
@@ -74,10 +81,16 @@ public class Bone {
                 rotationY,
                 rotationZ,
                 name,
-                uuid
+                uuid,
+                null
         );
 
         return copy;
+    }
+
+    //для формирования ресурспаков
+    public Group getGroup() {
+        return group;
     }
 
     public ItemDisplay getBoneEntity() {

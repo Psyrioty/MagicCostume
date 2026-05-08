@@ -4,6 +4,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.bukkit.Bukkit;
 import org.psyrioty.magicCostume.Objects.ResourcePack.Element;
 import org.psyrioty.magicCostume.Objects.ResourcePack.Group;
 
@@ -54,29 +55,19 @@ public class JsonBuilder {
 
             JsonObject rotationObject = new JsonObject();
 
-            if(element.getRotationX() != 0) {
+            if (element.getRotationX() == 0
+                    && element.getRotationY() == 0
+                    && element.getRotationZ() == 0) {
+
+                rotationObject.addProperty("angle", 0);
+                rotationObject.addProperty("axis", "y");
+            } else {
                 rotationObject.addProperty("x", element.getRotationX());
-            }
-
-
-            if(element.getRotationY() != 0) {
                 rotationObject.addProperty("y", element.getRotationY());
-            }
-
-            if(element.getRotationZ() != 0) {
                 rotationObject.addProperty("z", element.getRotationZ());
             }
 
-            if(
-                    element.getRotationX() == 0
-                    && element.getRotationY() == 0
-                    && element.getRotationZ() == 0
-            ){
-                rotationObject.addProperty("y", element.getRotationY());
-            }
-
             rotationObject.add("origin", vec3(element.getRotationOrigin()));
-
             jsonElement.add("rotation", rotationObject);
 
 
@@ -95,7 +86,11 @@ public class JsonBuilder {
             children.add(elementIterator);
 
             elementIterator++;
+
+            elementsJson.add(jsonElement);
         }
+
+        root.add("elements", elementsJson);
 
         /*   ------------------  groups ----------------  */
         JsonArray groups = new JsonArray();
@@ -114,7 +109,7 @@ public class JsonBuilder {
 
         /* ---------------- output ------------------ */
         String json = new GsonBuilder().setPrettyPrinting().create().toJson(root);
-        System.out.println(json);
+        Bukkit.getLogger().info(json);
     }
 
     private static JsonArray vec3(List<Float> values) {

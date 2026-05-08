@@ -1,6 +1,7 @@
 package org.psyrioty.magicCostume.Objects.ResourcePack;
 
 import java.util.List;
+import java.util.UUID;
 
 public class Element {
 
@@ -11,6 +12,7 @@ public class Element {
     String northTextureName, eastTextureName, southTextureName, westTextureName, upTextureName, downTextureName;
     float rotationX, rotationY, rotationZ;
     String name;
+    UUID uuid;
 
     public Element(
             List<Float> from,
@@ -33,7 +35,9 @@ public class Element {
             String upTextureName,
             String downTextureName,
 
-            String name
+            String name,
+
+            UUID uuid
     ){
         this.from = from;
         this.to = to;
@@ -57,6 +61,8 @@ public class Element {
         this.rotationZ = rotationZ;
 
         this.name = name;
+
+        this.uuid = uuid;
     }
 
     public List<Float> getFrom() {
@@ -131,7 +137,11 @@ public class Element {
         return rotationZ;
     }
 
-    public void setRotationOrigin(List<Float> rotationOrigin) {
-        this.rotationOrigin = rotationOrigin;
+    public UUID getUuid() {
+        return uuid;
+    }
+
+    public String getName() {
+        return name;
     }
 }
