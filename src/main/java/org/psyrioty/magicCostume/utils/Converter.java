@@ -69,6 +69,7 @@ public class Converter {
                 }
 
                 String name = jsonElement.get("name").getAsString();
+                name = name.replaceAll("\"", "");
 
                 List<Float> from = new ArrayList<>();
                 JsonArray jsonArrayFrom = jsonElement.get("from").getAsJsonArray();
@@ -407,6 +408,7 @@ public class Converter {
             List<JsonObject> jsonGroupsList = getObjects(jsonGroups);
             for(JsonObject jsonGroup: jsonGroupsList){
                 String name = getKeyValue(String.valueOf(jsonGroup), "name");
+                name = name.replaceAll("\"", "");
                 List<Float> origins = jsonToFloat(getKeyValue(String.valueOf(jsonGroup), "origin"));
                 List<Float> rotations = jsonToFloat(getKeyValue(String.valueOf(jsonGroup), "rotation"));
                 String uuidString = getKeyValue(String.valueOf(jsonGroup), "uuid");
@@ -452,7 +454,7 @@ public class Converter {
         try {
             String jsonOutlines = getKeyValue(modelFile, "outliner");
 
-            List<Outliner> allOutliners = getOutliners(jsonOutlines, new ArrayList<>(), elementList, bones, textures);
+            List<Outliner> allOutliners = getOutliners(jsonOutlines, new ArrayList<>(), elementList, bones, textures, modelFile);
             List<Bone> headBones = new ArrayList<>();
             setChildBones(bones, allOutliners, headBones);
 
@@ -554,7 +556,8 @@ public class Converter {
 
     private static List<Outliner> getOutliners(
             String jsonOutlines, List<Outliner> outliners, List<Element> elementList, List<Bone> bones,
-            List<String> textures
+            List<String> textures,
+            File modelFile
     ){
         try {
             List<JsonObject> jsonOutlinersList = getObjects(jsonOutlines);
@@ -565,14 +568,22 @@ public class Converter {
                 UUID uuid = UUID.fromString(uuidString);
 
                 //========================для ресурспака====================================
-                List<UUID> cubeUUIDList = getCubeOutliners(jsonOutlines);
-                List<Element> needElements = getNeedElements(elementList, cubeUUIDList);
                 Group group = getNeedGroup(
                         uuidString,
                         bones
                 );
 
-                createBoneJsonResourcePack(null, textures, needElements, group);
+                boolean debug = false;
+                if(group.getName().equals("arm_left")){
+                    Bukkit.getLogger().info(jsonOutlines.toString());
+                    debug = true;
+                }
+
+                List<UUID> cubeUUIDList = getCubeOutliners(jsonOutliner.get("children").toString(), debug);
+                List<Element> needElements = getNeedElements(elementList, cubeUUIDList);
+
+
+                createBoneJsonResourcePack(modelFile.getName().replaceAll(".bbmodel", ""), textures, needElements, group);
                 //-------------------------------------------------------------------------
 
                 Outliner outliner = new Outliner(uuid);
@@ -583,7 +594,7 @@ public class Converter {
                     continue;
                 }
                 List<Outliner> childOutlinersNew = new ArrayList<>();
-                List<Outliner> childOutliners = getOutliners(newJsonOutlines, childOutlinersNew, elementList, bones, textures);
+                List<Outliner> childOutliners = getOutliners(newJsonOutlines, childOutlinersNew, elementList, bones, textures, modelFile);
 
                 for(Outliner outlinerChild: childOutliners){
                     outliner.addChildOutliner(outlinerChild);
@@ -723,19 +734,20 @@ public class Converter {
         return map;
     }
 
-    private static List<UUID> getCubeOutliners(String json){
+    private static List<UUID> getCubeOutliners(String json, boolean debug){
         List<UUID> uuidList = new ArrayList<>();
 
         try {
             JsonArray array = JsonParser.parseString(json).getAsJsonArray();
 
             for (JsonElement element : array) {
-
-                // Берём только строки
                 if (element.isJsonPrimitive() && element.getAsJsonPrimitive().isString()) {
 
                     String uuidString = element.getAsString();
                     UUID uuid = UUID.fromString(uuidString);
+                    if(debug){
+                        Bukkit.getLogger().info(uuidString);
+                    }
 
                     uuidList.add(uuid);
                 }
