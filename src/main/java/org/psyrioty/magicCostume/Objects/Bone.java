@@ -6,6 +6,8 @@ import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.components.CustomModelDataComponent;
 import org.bukkit.util.Transformation;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -26,6 +28,8 @@ public class Bone {
 
     Group group; //для формирования ресурспаков
 
+    String modelName;
+
     public Bone(
             float originX,
             float originY,
@@ -39,7 +43,9 @@ public class Bone {
 
             UUID uuid,
 
-            Group group
+            Group group,
+
+            String modelName
     ){
         this.originX = originX;
         this.originY = originY;
@@ -54,6 +60,8 @@ public class Bone {
         this.uuid = uuid;
 
         this.group = group;
+
+        this.modelName = modelName;
     }
 
     public void addChildBone(Bone bone){
@@ -82,7 +90,8 @@ public class Bone {
                 rotationZ,
                 name,
                 uuid,
-                null
+                null,
+                modelName
         );
 
         return copy;
@@ -102,7 +111,18 @@ public class Bone {
         Location location = target.getLocation();
         location.setPitch(0);
 
-        ItemStack itemStack = new ItemStack(Material.PURPLE_WOOL);
+        ItemStack itemStack = new ItemStack(Material.WHITE_WOOL);
+        ItemMeta meta = itemStack.getItemMeta();
+
+        CustomModelDataComponent component = meta.getCustomModelDataComponent();
+        List<String> strings = new ArrayList<>();
+        strings.add(modelName + "_" + name);
+        component.setStrings(strings);
+
+
+        meta.setCustomModelDataComponent(component);
+
+        itemStack.setItemMeta(meta);
 
         ItemDisplay display = world.spawn(location, ItemDisplay.class, entity -> {
             entity.setItemStack(itemStack);

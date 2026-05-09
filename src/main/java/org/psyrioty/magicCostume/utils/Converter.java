@@ -25,10 +25,14 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.bukkit.Bukkit.getLogger;
-import static org.psyrioty.magicCostume.utils.JsonBuilder.createBoneJsonResourcePack;
+import static org.psyrioty.magicCostume.utils.ResourcePackBuilder.*;
 
 public class Converter {
     public static void ConvertBBModelsToResourcePackAndModels(){
+        clearResourcePackFolder();
+
+        createPackMcmeta();
+
         List<File> modelFiles = getAllBbModels();
         for(File modelFile: modelFiles){
             try {
@@ -38,12 +42,16 @@ public class Converter {
                 List<Element> elementList = getAllBBModelElements(modelFile); //
                 List<String> textureNames = getTextureNames(modelFile);
 
+                decodeTextures(modelFile);
+
                 Costume costume = getCostume(modelFile, bones, elementList, textureNames); //создание модели
                 if(costume == null){
                     continue;
                 }
 
                 MagicCostume.getPlugin().getCostumes().add(costume);
+
+                createItemFile();
 
                 AnimationController animationController = createAnimationController(modelFile, bones); //создание анимаций
                 if(animationController != null) {
@@ -437,7 +445,9 @@ public class Converter {
 
                         uuid,
 
-                        group
+                        group,
+
+                        modelFile.getName().replace(".bbmodel", "")
                 );
 
                 bones.add(bone);
