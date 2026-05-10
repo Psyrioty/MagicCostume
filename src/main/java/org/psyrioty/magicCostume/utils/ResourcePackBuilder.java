@@ -5,15 +5,19 @@ import org.bukkit.Bukkit;
 import org.psyrioty.magicCostume.MagicCostume;
 import org.psyrioty.magicCostume.Objects.ResourcePack.Element;
 import org.psyrioty.magicCostume.Objects.ResourcePack.Group;
+import org.psyrioty.magicCostume.Objects.ResourcePack.Texture;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 public class ResourcePackBuilder {
     static List<JsonObject> caseList = new ArrayList<>();
@@ -69,20 +73,20 @@ public class ResourcePackBuilder {
 
     public static void createBoneJsonResourcePack(
             String name,
-            List<String> textureNames,
+            List<Texture> textureList,
             List<Element> elements,
             Group group
     ) {
         JsonObject root = new JsonObject();
 
         JsonObject textures = new JsonObject();
-        if (textureNames != null && !textureNames.isEmpty()) {
-            textures.addProperty("particle", "#0");
+        if (textureList != null && !textureList.isEmpty()) {
             int texturesIterator = 0;
-            for (String textureName : textureNames) {
-                textures.addProperty(String.valueOf(texturesIterator), "magiccostume:costumes/" + name + "/" + textureName.replace(".png", ""));
+            for (Texture texture : textureList) {
+                textures.addProperty(String.valueOf(texturesIterator), "magiccostume:costumes/" + name + "/" + texture.getName().replace(".png", ""));
                 texturesIterator++;
             }
+            textures.addProperty("particle", "magiccostume:costumes/" + name + "/" + textureList.getFirst().getName().replace(".png", ""));
         }
         root.add("textures", textures);
 
@@ -93,33 +97,130 @@ public class ResourcePackBuilder {
         for (Element element : elements) {
             JsonObject jsonElement = new JsonObject();
 
-            List<Float> newVectorFrom = mathVec3(element.getFrom(), group.getOrigin());
+            List<Float> newVectorFrom = mathVec3(element.getFrom(), group.getOrigin(), element.getRotationOrigin());
             jsonElement.add("from", vec3(newVectorFrom));
+            if(group.getName().equals("arm_left")) {
+                Bukkit.getLogger().info("");
+                Bukkit.getLogger().info("from:");
+                Bukkit.getLogger().info("element: " + element.getFrom());
+                Bukkit.getLogger().info("group: " + group.getOrigin());
+                Bukkit.getLogger().info("element pivot: " + element.getRotationOrigin());
+                Bukkit.getLogger().info("Result: " + newVectorFrom);
+                Bukkit.getLogger().info("");
+            }
 
-            List<Float> newVectorTo = mathVec3(element.getTo(), group.getOrigin());
+            List<Float> newVectorTo = mathVec3(element.getTo(), group.getOrigin(), element.getRotationOrigin());
             jsonElement.add("to", vec3(newVectorTo));
+            if(group.getName().equals("arm_left")) {
+                Bukkit.getLogger().info("");
+                Bukkit.getLogger().info("to:");
+                Bukkit.getLogger().info("element: " + element.getTo());
+                Bukkit.getLogger().info("group: " + group.getOrigin());
+                Bukkit.getLogger().info("element pivot: " + element.getRotationOrigin());
+                Bukkit.getLogger().info("Result: " + newVectorTo);
+                Bukkit.getLogger().info("");
+            }
 
             JsonObject rotationObject = new JsonObject();
-            if (element.getRotationX() == 0
-                    && element.getRotationY() == 0
-                    && element.getRotationZ() == 0) {
+
+            int isCoordinate = isOneCoordinate(
+                    element.getRotationX(),
+                    element.getRotationY(),
+                    element.getRotationZ()
+            );
+
+            if(isCoordinate == 0){
                 rotationObject.addProperty("angle", 0);
                 rotationObject.addProperty("axis", "y");
-            } else {
+            }else if(isCoordinate == -1){
                 rotationObject.addProperty("x", element.getRotationX());
                 rotationObject.addProperty("y", element.getRotationY());
                 rotationObject.addProperty("z", element.getRotationZ());
+            }else{
+                if(isCoordinate == 1){
+                    rotationObject.addProperty("angle", element.getRotationX());
+                    rotationObject.addProperty("axis", "x");
+                }else if(isCoordinate == 2){
+                    rotationObject.addProperty("angle", element.getRotationX());
+                    rotationObject.addProperty("axis", "y");
+                }else if(isCoordinate == 3){
+                    rotationObject.addProperty("angle", element.getRotationX());
+                    rotationObject.addProperty("axis", "z");
+                }
             }
+
+            //if (element.getRotationX() == 0
+            //        && element.getRotationY() == 0
+            //        && element.getRotationZ() == 0) {
+            //} else {
+            //}
+
+            //List<Float> newRotationOrigin = mathVec3(element.getRotationOrigin(), group.getOrigin());
+            //rotationObject.add("origin", vec3(newRotationOrigin));
             rotationObject.add("origin", vec3(element.getRotationOrigin()));
             jsonElement.add("rotation", rotationObject);
 
             JsonObject faces = new JsonObject();
-            faces.add("north", face(element.getNorthFaces(), element.getNorthTextureName()));
-            faces.add("east", face(element.getEastFaces(), element.getEastTextureName()));
-            faces.add("south", face(element.getSouthFaces(), element.getSouthTextureName()));
-            faces.add("west", face(element.getWestFaces(), element.getWestTextureName()));
-            faces.add("up", face(element.getUpFaces(), element.getUpTextureName()));
-            faces.add("down", face(element.getDownFaces(), element.getDownTextureName()));
+            faces.add(
+                    "north",
+                    face(
+                            element.getNorthFaces(),
+                            element.getNorthTextureName(),
+                            element.getNorthTexture().getUv_width(),
+                            element.getNorthTexture().getUv_height(),
+                            element.getNorthRotation()
+                    )
+            );
+            faces.add(
+                    "east",
+                    face(
+                            element.getEastFaces(),
+                            element.getEastTextureName(),
+                            element.getEastTexture().getUv_width(),
+                            element.getEastTexture().getUv_height(),
+                            element.getEastRotation()
+                    )
+            );
+            faces.add(
+                    "south",
+                    face(
+                            element.getSouthFaces(),
+                            element.getSouthTextureName(),
+                            element.getSouthTexture().getUv_width(),
+                            element.getSouthTexture().getUv_height(),
+                            element.getSouthRotation()
+                    )
+            );
+            faces.add(
+                    "west",
+                    face(
+                            element.getWestFaces(),
+                            element.getWestTextureName(),
+                            element.getWestTexture().getUv_width(),
+                            element.getWestTexture().getUv_height(),
+                            element.getWestRotation()
+                    )
+            );
+            faces.add(
+                    "up",
+                    face(
+                            element.getUpFaces(),
+                            element.getUpTextureName(),
+                            element.getUpTexture().getUv_width(),
+                            element.getUpTexture().getUv_height(),
+                            element.getUpRotation()
+                    )
+            );
+            faces.add(
+                    "down",
+                    face(
+                            element.getDownFaces(),
+                            element.getDownTextureName(),
+                            element.getDownTexture().getUv_width(),
+                            element.getDownTexture().getUv_height(),
+                            element.getDownRotation()
+                    )
+            );
             jsonElement.add("faces", faces);
 
             //children.add(elementIterator++);
@@ -166,6 +267,163 @@ public class ResourcePackBuilder {
             //Bukkit.getLogger().info("Saved model json: " + targetFile);
         } catch (IOException e) {
             Bukkit.getLogger().severe("Failed to save model json: " + e.getMessage());
+        }
+    }
+
+    private static int isOneCoordinate(float x, float y, float z){
+        int coordinate = 0;
+        if(x != 0){
+            coordinate = 1;
+        }
+        if(y != 0){
+            if(coordinate != 0){
+                return -1;
+            }else{
+                coordinate = 2;
+            }
+        }
+        if(z != 0){
+            if(coordinate != 0){
+                return -1;
+            }else{
+                coordinate = 3;
+            }
+        }
+        return coordinate;
+    }
+
+    public static void zipResourcePack() {
+        try {
+            Path resourcePackFolder = MagicCostume.getPlugin()
+                    .getDataFolder()
+                    .toPath()
+                    .resolve("resourcepack");
+
+            Path zipFile = MagicCostume.getPlugin()
+                    .getDataFolder()
+                    .toPath()
+                    .resolve("resourcepack.zip");
+
+            Files.deleteIfExists(zipFile);
+
+            try (
+                    ZipOutputStream zipOutputStream = new ZipOutputStream(
+                            Files.newOutputStream(zipFile)
+                    )
+            ) {
+
+                Files.walk(resourcePackFolder)
+                        .filter(path -> !Files.isDirectory(path))
+                        .forEach(path -> {
+                            try {
+                                Path relativePath = resourcePackFolder.relativize(path);
+
+                                ZipEntry zipEntry = new ZipEntry(
+                                        relativePath.toString().replace("\\", "/")
+                                );
+
+                                zipOutputStream.putNextEntry(zipEntry);
+
+                                Files.copy(path, zipOutputStream);
+
+                                zipOutputStream.closeEntry();
+
+                            } catch (Exception e) {
+                                Bukkit.getLogger().severe(
+                                        "Zip entry error: " + path + " -> " + e.getMessage()
+                                );
+                            }
+                        });
+            }
+
+            Bukkit.getLogger().info("Resourcepack archived: " + zipFile);
+
+        } catch (Exception e) {
+            Bukkit.getLogger().severe("zipResourcePack error: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public static void createAtlasFile() {
+        try {
+            Path atlasPath = MagicCostume.getPlugin()
+                    .getDataFolder()
+                    .toPath()
+                    .resolve("resourcepack")
+                    .resolve("assets")
+                    .resolve("minecraft")
+                    .resolve("atlases")
+                    .resolve("blocks.json");
+
+            Files.createDirectories(atlasPath.getParent());
+
+            JsonObject root;
+
+            if (Files.exists(atlasPath)) {
+                try (Reader reader = Files.newBufferedReader(atlasPath, StandardCharsets.UTF_8)) {
+                    JsonElement parsed = JsonParser.parseReader(reader);
+                    root = parsed.isJsonObject() ? parsed.getAsJsonObject() : new JsonObject();
+                }
+            } else {
+                root = new JsonObject();
+            }
+
+            JsonArray sources;
+            if (root.has("sources") && root.get("sources").isJsonArray()) {
+                sources = root.getAsJsonArray("sources");
+            } else {
+                sources = new JsonArray();
+                root.add("sources", sources);
+            }
+
+            boolean exists = false;
+            for (JsonElement element : sources) {
+                if (!element.isJsonObject()) {
+                    continue;
+                }
+
+                JsonObject obj = element.getAsJsonObject();
+                if (!obj.has("type") || !obj.has("source") || !obj.has("prefix")) {
+                    continue;
+                }
+
+                String type = obj.get("type").getAsString();
+                String source = obj.get("source").getAsString();
+                String prefix = obj.get("prefix").getAsString();
+
+                if ("directory".equals(type)
+                        && "costumes".equals(source)
+                        && "costumes/".equals(prefix)) {
+                    exists = true;
+                    break;
+                }
+            }
+
+            if (!exists) {
+                JsonObject newSource = new JsonObject();
+                newSource.addProperty("type", "directory");
+                newSource.addProperty("source", "costumes");
+                newSource.addProperty("prefix", "costumes/");
+                sources.add(newSource);
+            }
+
+            String json = new GsonBuilder()
+                    .setPrettyPrinting()
+                    .create()
+                    .toJson(root);
+
+            Files.writeString(
+                    atlasPath,
+                    json,
+                    StandardCharsets.UTF_8,
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.TRUNCATE_EXISTING
+            );
+
+            Bukkit.getLogger().info("Created/updated atlas file: " + atlasPath);
+        } catch (Exception e) {
+            Bukkit.getLogger().severe("createAtlasFile error: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -306,7 +564,7 @@ public class ResourcePackBuilder {
             textureName = safeFileName(textureName);
             modelName = safeFileName(modelName);
 
-            if(textureName.endsWith(".png")){
+            if (textureName.endsWith(".png")) {
                 textureName = textureName.substring(0, textureName.length() - 4);
             }
 
@@ -316,7 +574,6 @@ public class ResourcePackBuilder {
                     .resolve("assets")
                     .resolve("magiccostume")
                     .resolve("textures")
-                    .resolve("item")
                     .resolve("costumes")
                     .resolve(modelName)
                     .resolve(textureName + ".png");
@@ -326,20 +583,61 @@ public class ResourcePackBuilder {
 
             Bukkit.getLogger().info("Saved texture: " + target);
 
+            createMcmetaIfNeeded(target, textureName, textureObj);
+
         } catch (Exception e) {
             Bukkit.getLogger().severe("saveTextureObject error: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
+    private static void createMcmetaIfNeeded(Path pngPath, String textureName, JsonObject textureObj) {
+        try {
+            int uv_height = textureObj.get("uv_height").getAsInt();
+            int height = textureObj.get("height").getAsInt();
+
+            if(height % uv_height != 0 || uv_height == height){
+                return;
+            }
+
+            int fps = textureObj.get("fps").getAsInt();
+
+            int frametime = Math.max(1, 20 / fps);
+
+            Path mcmetaPath = Path.of(pngPath.toString() + ".mcmeta");
+
+            String mcmeta = String.format("""
+                                {
+                                  "animation": {
+                                    "frametime": %d
+                                  }
+                                }
+                                """, frametime);
+
+            Files.writeString(mcmetaPath, mcmeta, StandardCharsets.UTF_8);
+            Bukkit.getLogger().info("Saved mcmeta: " + mcmetaPath);
+
+        } catch (Exception e) {
+            Bukkit.getLogger().severe("createMcmetaIfNeeded error: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 
 
-    private static List<Float> mathVec3(List<Float> cubeVec, List<Float> boneVec){
+
+    private static List<Float> mathVec3(List<Float> cubeVec, List<Float> boneVec, List<Float> origin){
         List<Float> newVector = new ArrayList<>();
-        for(int i = 0; i < cubeVec.size(); i++){
+        float x = cubeVec.getFirst() - boneVec.getFirst() + origin.getFirst();
+        float y = cubeVec.get(1) - boneVec.get(1) + origin.get(1);
+        float z = cubeVec.get(2) - boneVec.get(2) + origin.get(2);
+        newVector.add(x);
+        newVector.add(y);
+        newVector.add(z);
+
+        /*for(int i = 0; i < cubeVec.size(); i++){
             float value = cubeVec.get(i) - boneVec.get(i);
             newVector.add(value);
-        }
+        }*/
         return newVector;
     }
 
@@ -351,16 +649,32 @@ public class ResourcePackBuilder {
         return arr;
     }
 
-    private static JsonObject face(List<Float> values, String textureName) {
+    private static JsonObject face(
+            List<Float> values,
+            String textureName,
+            int textureWidth,
+            int textureHeight,
+            int rotation
+    ) {
         JsonObject f = new JsonObject();
 
+        float u1 = values.get(0) / textureWidth * 16f;
+        float v1 = values.get(1) / textureHeight * 16f;
+        float u2 = values.get(2) / textureWidth * 16f;
+        float v2 = values.get(3) / textureHeight * 16f;
+
         JsonArray uv = new JsonArray();
-        uv.add(values.get(0));
-        uv.add(values.get(1));
-        uv.add(values.get(2));
-        uv.add(values.get(3));
+        uv.add(u1);
+        uv.add(v1);
+        uv.add(u2);
+        uv.add(v2);
 
         f.add("uv", uv);
+
+        if(rotation != 0){
+            f.addProperty("rotation", rotation);
+        }
+
         f.addProperty("texture", textureName);
 
         return f;

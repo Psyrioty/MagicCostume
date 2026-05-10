@@ -15,6 +15,7 @@ import org.psyrioty.magicCostume.Objects.Bone;
 import org.psyrioty.magicCostume.Objects.Costume;
 import org.psyrioty.magicCostume.Objects.ResourcePack.Element;
 import org.psyrioty.magicCostume.Objects.ResourcePack.Group;
+import org.psyrioty.magicCostume.Objects.ResourcePack.Texture;
 
 import java.io.File;
 import java.io.FileReader;
@@ -32,6 +33,7 @@ public class Converter {
         clearResourcePackFolder();
 
         createPackMcmeta();
+        createAtlasFile();
 
         List<File> modelFiles = getAllBbModels();
         for(File modelFile: modelFiles){
@@ -39,12 +41,12 @@ public class Converter {
                 //############## создание модели #####################
                 List<Bone> bones = getBones(modelFile); // создание костей
 
-                List<Element> elementList = getAllBBModelElements(modelFile); //
-                List<String> textureNames = getTextureNames(modelFile);
+                List<Texture> textures = getTextureNames(modelFile);
+                List<Element> elementList = getAllBBModelElements(modelFile, textures); //
 
                 decodeTextures(modelFile);
 
-                Costume costume = getCostume(modelFile, bones, elementList, textureNames); //создание модели
+                Costume costume = getCostume(modelFile, bones, elementList, textures); //создание модели
                 if(costume == null){
                     continue;
                 }
@@ -57,6 +59,8 @@ public class Converter {
                 if(animationController != null) {
                     costume.setAnimationController(animationController);
                 }
+
+                zipResourcePack();
                 //####################################################
             }catch (Exception exception){
                 Bukkit.getLogger().severe("MagicCostume error Converter.java ConvertBBModelsToResourcePack() " + exception.getMessage());
@@ -64,12 +68,16 @@ public class Converter {
         }
     }
 
-    private static List<Element> getAllBBModelElements(File modelFile){
+    private static List<Element> getAllBBModelElements(File modelFile, List<Texture> textures){
         try {
             List<Element> elements = new ArrayList<>();
 
             String jsonElements = getKeyValue(modelFile, "elements");
             List<JsonObject> jsonElementList = getObjects(jsonElements);
+
+            String resolution = getKeyValue(modelFile, "resolution");
+            int resolutionWidth = Integer.parseInt(getKeyValue(resolution, "width"));
+            int resolutionHeight = Integer.parseInt(getKeyValue(resolution, "height"));
 
             for(JsonObject jsonElement: jsonElementList){
                 if(!jsonElement.get("type").getAsString().equals("cube")){
@@ -112,6 +120,13 @@ public class Converter {
                     rotationZ = rotationArray.get(2).getAsFloat();
                 }
 
+                int northRotation = 0;
+                int eastRotation = 0;
+                int southRotation = 0;
+                int westRotation = 0;
+                int upRotation = 0;
+                int downRotation = 0;
+
                 JsonObject faces = jsonElement.get("faces").getAsJsonObject();
                 List<Float> northFaces = new ArrayList<>();
                 JsonObject northFaceJson = faces.get("north").getAsJsonObject();
@@ -120,7 +135,12 @@ public class Converter {
                 northFaces.add(jsonArrayNorth.get(1).getAsFloat());
                 northFaces.add(jsonArrayNorth.get(2).getAsFloat());
                 northFaces.add(jsonArrayNorth.get(3).getAsFloat());
-                String textureNameNorth = "#" + northFaceJson.get("texture").getAsInt();
+                int textureIdNorth = northFaceJson.get("texture").getAsInt();
+                String textureNameNorth = "#" + textureIdNorth;
+                Texture textureNorth = textures.get(textureIdNorth);
+                if(northFaceJson.has("rotation")){
+                    northRotation = northFaceJson.get("rotation").getAsInt();
+                }
 
                 List<Float> eastFaces = new ArrayList<>();
                 JsonObject eastFaceJson = faces.get("east").getAsJsonObject();
@@ -129,7 +149,12 @@ public class Converter {
                 eastFaces.add(jsonArrayEast.get(1).getAsFloat());
                 eastFaces.add(jsonArrayEast.get(2).getAsFloat());
                 eastFaces.add(jsonArrayEast.get(3).getAsFloat());
-                String textureNameEast = "#" + eastFaceJson.get("texture").getAsInt();
+                int textureIdEast = eastFaceJson.get("texture").getAsInt();
+                String textureNameEast = "#" + textureIdEast;
+                Texture textureEast = textures.get(textureIdEast);
+                if(eastFaceJson.has("rotation")){
+                    eastRotation = eastFaceJson.get("rotation").getAsInt();
+                }
 
                 List<Float> southFaces = new ArrayList<>();
                 JsonObject southFaceJson = faces.get("south").getAsJsonObject();
@@ -138,7 +163,12 @@ public class Converter {
                 southFaces.add(jsonArraySouth.get(1).getAsFloat());
                 southFaces.add(jsonArraySouth.get(2).getAsFloat());
                 southFaces.add(jsonArraySouth.get(3).getAsFloat());
-                String textureNameSouth = "#" + southFaceJson.get("texture").getAsInt();
+                int textureIdSouth = southFaceJson.get("texture").getAsInt();
+                String textureNameSouth = "#" + textureIdSouth;
+                Texture textureSouth = textures.get(textureIdSouth);
+                if(southFaceJson.has("rotation")){
+                    southRotation = southFaceJson.get("rotation").getAsInt();
+                }
 
                 List<Float> westFaces = new ArrayList<>();
                 JsonObject westFaceJson = faces.get("west").getAsJsonObject();
@@ -147,7 +177,12 @@ public class Converter {
                 westFaces.add(jsonArrayWest.get(1).getAsFloat());
                 westFaces.add(jsonArrayWest.get(2).getAsFloat());
                 westFaces.add(jsonArrayWest.get(3).getAsFloat());
-                String textureNameWest = "#" + westFaceJson.get("texture").getAsInt();
+                int textureIdWest = westFaceJson.get("texture").getAsInt();
+                String textureNameWest = "#" + textureIdWest;
+                Texture textureWest = textures.get(textureIdWest);
+                if(westFaceJson.has("rotation")){
+                    westRotation = westFaceJson.get("rotation").getAsInt();
+                }
 
                 List<Float> upFaces = new ArrayList<>();
                 JsonObject upFaceJson = faces.get("up").getAsJsonObject();
@@ -156,7 +191,12 @@ public class Converter {
                 upFaces.add(jsonArrayUp.get(1).getAsFloat());
                 upFaces.add(jsonArrayUp.get(2).getAsFloat());
                 upFaces.add(jsonArrayUp.get(3).getAsFloat());
-                String textureNameUp = "#" + upFaceJson.get("texture").getAsInt();
+                int textureIdUp = upFaceJson.get("texture").getAsInt();
+                String textureNameUp = "#" + textureIdUp;
+                Texture textureUp = textures.get(textureIdUp);
+                if(upFaceJson.has("rotation")){
+                    upRotation = upFaceJson.get("rotation").getAsInt();
+                }
 
                 List<Float> downFaces = new ArrayList<>();
                 JsonObject downFaceJson = faces.get("down").getAsJsonObject();
@@ -165,12 +205,17 @@ public class Converter {
                 downFaces.add(jsonArrayDown.get(1).getAsFloat());
                 downFaces.add(jsonArrayDown.get(2).getAsFloat());
                 downFaces.add(jsonArrayDown.get(3).getAsFloat());
-                String textureNameDown = "#" + downFaceJson.get("texture").getAsInt();
+                int textureIdDown = downFaceJson.get("texture").getAsInt();
+                String textureNameDown = "#" + textureIdDown;
+                Texture textureDown = textures.get(textureIdDown);
+                if(downFaceJson.has("rotation")){
+                    downRotation = downFaceJson.get("rotation").getAsInt();
+                }
 
-                List<Float> rotationOrigin = new ArrayList<>();
-                rotationOrigin.add((float) 0);
-                rotationOrigin.add((float) 0);
-                rotationOrigin.add((float) 0);
+                //List<Float> rotationOrigin = new ArrayList<>();
+                //rotationOrigin.add((float) 0);
+                //rotationOrigin.add((float) 0);
+                //rotationOrigin.add((float) 0);
 
                 String uuidString = jsonElement.get("uuid").getAsString();
                 UUID uuid = UUID.fromString(uuidString);
@@ -182,7 +227,7 @@ public class Converter {
                         rotationX,
                         rotationY,
                         rotationZ,
-                        rotationOrigin,
+                        origin,
 
                         northFaces,
                         eastFaces,
@@ -200,7 +245,24 @@ public class Converter {
 
                         name,
 
-                        uuid
+                        uuid,
+
+                        resolutionWidth,
+                        resolutionHeight,
+
+                        downRotation,
+                        eastRotation,
+                        northRotation,
+                        southRotation,
+                        upRotation,
+                        westRotation,
+
+                        textureNorth,
+                        textureDown,
+                        textureEast,
+                        textureSouth,
+                        textureUp,
+                        textureWest
                 );
 
                 elements.add(element);
@@ -460,7 +522,7 @@ public class Converter {
         return null;
     }
 
-    private static Costume getCostume(File modelFile, List<Bone> bones, List<Element> elementList, List<String> textures){
+    private static Costume getCostume(File modelFile, List<Bone> bones, List<Element> elementList, List<Texture> textures){
         try {
             String jsonOutlines = getKeyValue(modelFile, "outliner");
 
@@ -492,7 +554,7 @@ public class Converter {
 
                 List<Outliner> childOutliners = outliner.getChildOutliners();
                 if(childOutliners.isEmpty()){
-                    return;
+                    continue;
                 }
                 for(Outliner outlinerChild: childOutliners){
                     Bone childBone = getBoneForUUID(outlinerChild.getUuid(), bones);
@@ -544,16 +606,30 @@ public class Converter {
         return null;
     }
 
-    private static List<String> getTextureNames(File modelFile){
+    private static List<Texture> getTextureNames(File modelFile){
         try {
-            List<String> textures = new ArrayList<>();
+            List<Texture> textures = new ArrayList<>();
 
             String jsonTextures = getKeyValue(modelFile, "textures");
             List<JsonObject> jsonTextureList = getObjects(jsonTextures);
 
             for (JsonObject jsonTexture : jsonTextureList) {
                 String name = jsonTexture.get("name").getAsString();
-                textures.add(name);
+                int uv_height = jsonTexture.get("uv_height").getAsInt();
+                int uv_width = jsonTexture.get("uv_width").getAsInt();
+
+                int width = jsonTexture.get("width").getAsInt();
+                int height = jsonTexture.get("height").getAsInt();
+
+                Texture texture = new Texture(
+                        name,
+                        width,
+                        height,
+                        uv_width,
+                        uv_height
+                );
+
+                textures.add(texture);
             }
 
             return textures;
@@ -566,7 +642,7 @@ public class Converter {
 
     private static List<Outliner> getOutliners(
             String jsonOutlines, List<Outliner> outliners, List<Element> elementList, List<Bone> bones,
-            List<String> textures,
+            List<Texture> textures,
             File modelFile
     ){
         try {

@@ -64,8 +64,36 @@ public class Bone {
         this.modelName = modelName;
     }
 
+    public void setOriginX(float originX) {
+        this.originX = originX;
+    }
+
+    public void setOriginY(float originY) {
+        this.originY = originY;
+    }
+
+    public void setOriginZ(float originZ) {
+        this.originZ = originZ;
+    }
+
     public void addChildBone(Bone bone){
         childBones.add(bone);
+
+        bone.setOriginX(bone.getOriginX() - originX);
+        bone.setOriginY(bone.getOriginY() - originY);
+        bone.setOriginZ(bone.getOriginZ() - originZ);
+    }
+
+    public float getOriginX() {
+        return originX;
+    }
+
+    public float getOriginY() {
+        return originY;
+    }
+
+    public float getOriginZ() {
+        return originZ;
     }
 
     public List<Bone> getChildBones() {

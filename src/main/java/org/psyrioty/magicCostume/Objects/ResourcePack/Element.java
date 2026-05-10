@@ -1,5 +1,6 @@
 package org.psyrioty.magicCostume.Objects.ResourcePack;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,6 +14,21 @@ public class Element {
     float rotationX, rotationY, rotationZ;
     String name;
     UUID uuid;
+    int resolutionWidth, resolutionHeight;
+
+    private int northRotation;
+    private int eastRotation;
+    private int southRotation;
+    private int westRotation;
+    private int upRotation;
+    private int downRotation;
+
+    Texture northTexture;
+    Texture eastTexture;
+    Texture southTexture;
+    Texture westTexture;
+    Texture upTexture;
+    Texture downTexture;
 
     public Element(
             List<Float> from,
@@ -37,11 +53,38 @@ public class Element {
 
             String name,
 
-            UUID uuid
+            UUID uuid,
+
+            int resolutionWidth,
+            int resolutionHeight,
+
+            int downRotation,
+            int eastRotation,
+            int northRotation,
+            int southRotation,
+            int upRotation,
+            int westRotation,
+
+            Texture northTexture,
+            Texture downTexture,
+            Texture eastTexture,
+            Texture southTexture,
+            Texture upTexture,
+            Texture westTexture
     ){
+        //this.from = repairModel(from);
+        //this.to = repairModel(to);
+
         this.from = from;
         this.to = to;
-        this.rotationOrigin = rotationOrigin;
+
+        List<Float> origin = new ArrayList<>();
+        origin.add((float) 8);
+        origin.add((float) 0);
+        origin.add((float) 8);
+
+        this.rotationOrigin = origin;
+
         this.northFaces = northFaces;
         this.eastFaces = eastFaces;
         this.southFaces = southFaces;
@@ -63,6 +106,94 @@ public class Element {
         this.name = name;
 
         this.uuid = uuid;
+
+        this.resolutionWidth = resolutionWidth;
+        this.resolutionHeight = resolutionHeight;
+
+        this.downRotation = downRotation;
+        this.eastRotation = eastRotation;
+        this.northRotation = northRotation;
+        this.southRotation = southRotation;
+        this.upRotation = upRotation;
+        this.westRotation = westRotation;
+
+
+        this.northTexture = northTexture;
+        this.downTexture = downTexture;
+        this.eastTexture = eastTexture;
+        this.southTexture = southTexture;
+        this.upTexture = upTexture;
+        this.westTexture = westTexture;
+    }
+
+    private List<Float> repairModel(List<Float> values){
+        List<Float> newValues = new ArrayList<>();
+
+        float x = (values.getFirst() + 8) / 2;
+        float y = values.get(1) / 2;
+        float z = (values.get(2) + 8) / 2;
+
+        newValues.add(x);
+        newValues.add(y);
+        newValues.add(z);
+
+        return newValues;
+    }
+
+    public Texture getDownTexture() {
+        return downTexture;
+    }
+
+    public Texture getEastTexture() {
+        return eastTexture;
+    }
+
+    public Texture getNorthTexture() {
+        return northTexture;
+    }
+
+    public Texture getSouthTexture() {
+        return southTexture;
+    }
+
+    public Texture getUpTexture() {
+        return upTexture;
+    }
+
+    public Texture getWestTexture() {
+        return westTexture;
+    }
+
+    public int getDownRotation() {
+        return downRotation;
+    }
+
+    public int getEastRotation() {
+        return eastRotation;
+    }
+
+    public int getNorthRotation() {
+        return northRotation;
+    }
+
+    public int getSouthRotation() {
+        return southRotation;
+    }
+
+    public int getUpRotation() {
+        return upRotation;
+    }
+
+    public int getWestRotation() {
+        return westRotation;
+    }
+
+    public int getResolutionWidth() {
+        return resolutionWidth;
+    }
+
+    public int getResolutionHeight() {
+        return resolutionHeight;
     }
 
     public List<Float> getFrom() {
