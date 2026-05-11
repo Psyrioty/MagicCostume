@@ -15,6 +15,12 @@ public class AnimationKey {
     ){
         this.tick = tick;
 
+        if(typeKey.equals("position")){
+            x /= 16;
+            y /= 16;
+            z /= 16;
+        }
+
         this.x = x;
         this.y = y;
         this.z = z;

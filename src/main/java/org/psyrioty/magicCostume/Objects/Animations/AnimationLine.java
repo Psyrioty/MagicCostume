@@ -51,6 +51,7 @@ public class AnimationLine {
         }
 
         rotationTick(bone, tick);
+        translateTick(bone, tick);
     }
 
     private Bone getNeedBone(List<Bone> bones){
@@ -168,31 +169,91 @@ public class AnimationLine {
     }
 
     private void rotate(Bone bone, float x, float y, float z){
-        double rx = Math.toRadians(((x % 360) + 360) % 360);
-        double ry = Math.toRadians(((y % 360) + 360) % 360);
-        double rz = Math.toRadians(((z % 360) + 360) % 360);
+        float rx = (float) Math.toRadians(((x % 360) + 360) % 360);
+        float ry = (float) Math.toRadians(((y % 360) + 360) % 360);
+        float rz = (float) Math.toRadians(((z % 360) + 360) % 360);
 
-        Quaternionf left = new Quaternionf().rotationXYZ((float) rx, (float) ry, (float) rz);
+        Quaternionf rotation = new Quaternionf().rotationXYZ(rx, ry, rz);
 
         ItemDisplay boneEntity = bone.getBoneEntity();
         Transformation transformation = boneEntity.getTransformation();
-        Vector3f translation = transformation.getTranslation();
-        //float tx = translation.x;
-        //float ty = translation.y;
-        //float tz = translation.z;
-        //double length = Math.sqrt(((0 - tx) * (0 - tx)) + ((0 - ty) * (0 - ty)) + ((0 - tz) * (0 - tz)));
-        //Vector3f translationNew =
-        Vector3f scale = transformation.getScale();
-        Quaternionf rightRotation = transformation.getRightRotation();
 
-        //Bukkit.getLogger().info(bone.getName() + " X: " + x + " Y: " + y + " Z: " + z);
+        Vector3f pivot = new Vector3f(
+                bone.getOriginX(),
+                bone.getOriginY(),
+                bone.getOriginZ()
+        );
 
-        Transformation t = new Transformation(
+        Vector3f translation = new Vector3f(
+                bone.getOriginX(),
+                bone.getOriginY(),
+                bone.getOriginZ()
+        );
+
+        Vector3f scale = new Vector3f(transformation.getScale());
+        Quaternionf rightRotation = new Quaternionf(transformation.getRightRotation());
+
+        boneEntity.setTransformation(new Transformation(
                 translation,
-                left,
+                rotation,
                 scale,
                 rightRotation
+        ));
+    }
+
+    private void translate(Bone bone, float x, float y, float z){
+        ItemDisplay boneEntity = bone.getBoneEntity();
+        Transformation transformation = boneEntity.getTransformation();
+
+        Vector3f translation = new Vector3f(
+                bone.getOriginX() + x,
+                bone.getOriginY() + y,
+                bone.getOriginZ() + z
         );
-        bone.getBoneEntity().setTransformation(t);
+
+        Quaternionf leftRotation = new Quaternionf(transformation.getLeftRotation());
+        Vector3f scale = new Vector3f(transformation.getScale());
+        Quaternionf rightRotation = new Quaternionf(transformation.getRightRotation());
+
+        boneEntity.setTransformation(new Transformation(
+                translation,
+                leftRotation,
+                scale,
+                rightRotation
+        ));
+    }
+
+    private void translateTick(Bone bone, int tick){
+        List<AnimationKey> animationKeys = getCurrentGapBetweenKeys(translateKeys, tick);
+
+        if(animationKeys == null || animationKeys.isEmpty()){
+            return;
+        }
+
+        float x = mathValue(
+                animationKeys.getFirst().getX(),
+                animationKeys.getLast().getX(),
+                tick,
+                animationKeys.getFirst().getTick(),
+                animationKeys.getLast().getTick()
+        );
+
+        float y = mathValue(
+                animationKeys.getFirst().getY(),
+                animationKeys.getLast().getY(),
+                tick,
+                animationKeys.getFirst().getTick(),
+                animationKeys.getLast().getTick()
+        );
+
+        float z = mathValue(
+                animationKeys.getFirst().getZ(),
+                animationKeys.getLast().getZ(),
+                tick,
+                animationKeys.getFirst().getTick(),
+                animationKeys.getLast().getTick()
+        );
+
+        translate(bone, x, y, z);
     }
 }

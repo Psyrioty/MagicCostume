@@ -40,6 +40,7 @@ public class ActiveCostume {
                 if(boneList.isEmpty()){
                     continue;
                 }
+                Bukkit.getLogger().info(newHeadBone.getName() + " " + boneList);
                 getHeadBones(boneList, newHeadBone);
             }
         }catch (Exception exception){

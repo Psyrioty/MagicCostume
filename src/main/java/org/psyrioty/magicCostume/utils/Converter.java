@@ -53,19 +53,20 @@ public class Converter {
 
                 MagicCostume.getPlugin().getCostumes().add(costume);
 
-                createItemFile();
 
                 AnimationController animationController = createAnimationController(modelFile, bones); //создание анимаций
                 if(animationController != null) {
                     costume.setAnimationController(animationController);
                 }
 
-                zipResourcePack();
                 //####################################################
             }catch (Exception exception){
                 Bukkit.getLogger().severe("MagicCostume error Converter.java ConvertBBModelsToResourcePack() " + exception.getMessage());
             }
         }
+
+        createItemFile();
+        zipResourcePack();
     }
 
     private static List<Element> getAllBBModelElements(File modelFile, List<Texture> textures){
@@ -423,8 +424,6 @@ public class Converter {
             timeFloat = timeFloat * 20;
             int time = Math.round(timeFloat);
 
-            //Bukkit.getLogger().info(channel);
-            //Bukkit.getLogger().info(time + "");
 
             String dataPointsString = getKeyValue(jsonObject.toString(), "data_points");
             if(dataPointsString == null){
@@ -440,6 +439,12 @@ public class Converter {
                 x = dataPoint.get("x").getAsFloat();
                 y = dataPoint.get("y").getAsFloat();
                 z = dataPoint.get("z").getAsFloat();
+            }
+
+            if(channel.equals("rotation")){
+                x *= -1;
+                y *= -1;
+                z *= -1;
             }
 
             return new AnimationKey(
@@ -660,12 +665,8 @@ public class Converter {
                 );
 
                 boolean debug = false;
-                if(group.getName().equals("arm_left")){
-                    Bukkit.getLogger().info(jsonOutlines.toString());
-                    debug = true;
-                }
 
-                List<UUID> cubeUUIDList = getCubeOutliners(jsonOutliner.get("children").toString(), debug);
+                List<UUID> cubeUUIDList = getCubeOutliners(jsonOutliner.get("children").toString());
                 List<Element> needElements = getNeedElements(elementList, cubeUUIDList);
 
 
@@ -820,7 +821,7 @@ public class Converter {
         return map;
     }
 
-    private static List<UUID> getCubeOutliners(String json, boolean debug){
+    private static List<UUID> getCubeOutliners(String json){
         List<UUID> uuidList = new ArrayList<>();
 
         try {
@@ -831,9 +832,6 @@ public class Converter {
 
                     String uuidString = element.getAsString();
                     UUID uuid = UUID.fromString(uuidString);
-                    if(debug){
-                        Bukkit.getLogger().info(uuidString);
-                    }
 
                     uuidList.add(uuid);
                 }

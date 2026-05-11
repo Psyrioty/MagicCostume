@@ -99,27 +99,9 @@ public class ResourcePackBuilder {
 
             List<Float> newVectorFrom = mathVec3(element.getFrom(), group.getOrigin(), element.getRotationOrigin());
             jsonElement.add("from", vec3(newVectorFrom));
-            if(group.getName().equals("arm_left")) {
-                Bukkit.getLogger().info("");
-                Bukkit.getLogger().info("from:");
-                Bukkit.getLogger().info("element: " + element.getFrom());
-                Bukkit.getLogger().info("group: " + group.getOrigin());
-                Bukkit.getLogger().info("element pivot: " + element.getRotationOrigin());
-                Bukkit.getLogger().info("Result: " + newVectorFrom);
-                Bukkit.getLogger().info("");
-            }
 
             List<Float> newVectorTo = mathVec3(element.getTo(), group.getOrigin(), element.getRotationOrigin());
             jsonElement.add("to", vec3(newVectorTo));
-            if(group.getName().equals("arm_left")) {
-                Bukkit.getLogger().info("");
-                Bukkit.getLogger().info("to:");
-                Bukkit.getLogger().info("element: " + element.getTo());
-                Bukkit.getLogger().info("group: " + group.getOrigin());
-                Bukkit.getLogger().info("element pivot: " + element.getRotationOrigin());
-                Bukkit.getLogger().info("Result: " + newVectorTo);
-                Bukkit.getLogger().info("");
-            }
 
             JsonObject rotationObject = new JsonObject();
 
@@ -264,7 +246,6 @@ public class ResourcePackBuilder {
                     group.getName()
             );
 
-            //Bukkit.getLogger().info("Saved model json: " + targetFile);
         } catch (IOException e) {
             Bukkit.getLogger().severe("Failed to save model json: " + e.getMessage());
         }
@@ -627,9 +608,9 @@ public class ResourcePackBuilder {
 
     private static List<Float> mathVec3(List<Float> cubeVec, List<Float> boneVec, List<Float> origin){
         List<Float> newVector = new ArrayList<>();
-        float x = cubeVec.getFirst() - boneVec.getFirst() + origin.getFirst();
-        float y = cubeVec.get(1) - boneVec.get(1) + origin.get(1);
-        float z = cubeVec.get(2) - boneVec.get(2) + origin.get(2);
+        float x = (cubeVec.getFirst() - boneVec.getFirst()) * 0.5f + origin.getFirst();
+        float y = (cubeVec.get(1) - boneVec.get(1)) * 0.5f + origin.get(1);
+        float z = (cubeVec.get(2) - boneVec.get(2)) * 0.5f + origin.get(2);
         newVector.add(x);
         newVector.add(y);
         newVector.add(z);

@@ -1,5 +1,6 @@
 package org.psyrioty.magicCostume;
 
+import com.google.gson.JsonObject;
 import org.bukkit.event.EventHandler;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -23,6 +24,8 @@ public final class MagicCostume extends JavaPlugin {
     List<AnimationState> animationStateList = new ArrayList<>();
     Set<ActiveCostume> activeCostumes = new HashSet<>();
 
+    static List<JsonObject> caseList = new ArrayList<>(); //для ресурспака
+
     Tasker tasker; //выполнитель задач, например функция update
 
     @Override
@@ -41,6 +44,10 @@ public final class MagicCostume extends JavaPlugin {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
+    }
+
+    private static List<JsonObject> getCaseList() {
+        return caseList;
     }
 
     private void createDefaultAnimationStates(){

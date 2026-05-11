@@ -1,5 +1,6 @@
 package org.psyrioty.magicCostume.Objects;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -19,6 +20,7 @@ import java.util.UUID;
 
 public class Bone {
     float originX, originY, originZ; //начальная точка привязки
+    //float globalX, globalY, globalZ; //глобальная точка смещения
     float rotationX, rotationY, rotationZ; //поворот кости
     List<Bone> childBones = new ArrayList<>(); //дочерние кости
     String name; //имя кости
@@ -47,6 +49,7 @@ public class Bone {
 
             String modelName
     ){
+
         this.originX = originX;
         this.originY = originY;
         this.originZ = originZ;
@@ -79,9 +82,14 @@ public class Bone {
     public void addChildBone(Bone bone){
         childBones.add(bone);
 
-        bone.setOriginX(bone.getOriginX() - originX);
-        bone.setOriginY(bone.getOriginY() - originY);
-        bone.setOriginZ(bone.getOriginZ() - originZ);
+        //bone.setOriginX(bone.getGlobalX() - globalX);
+        //bone.setOriginY(bone.getGlobalY() - globalY);
+        //bone.setOriginZ(bone.getGlobalZ() - globalZ);
+
+
+        Bukkit.getLogger().info("");
+        Bukkit.getLogger().info(bone.name + " X: " + bone.getOriginX() + " Y: " + bone.getOriginY() + " Z: " + bone.getOriginZ());
+        Bukkit.getLogger().info("");
     }
 
     public float getOriginX() {
@@ -145,6 +153,7 @@ public class Bone {
         CustomModelDataComponent component = meta.getCustomModelDataComponent();
         List<String> strings = new ArrayList<>();
         strings.add(modelName + "_" + name);
+        Bukkit.getLogger().info(modelName + "_" + name);
         component.setStrings(strings);
 
 
@@ -166,7 +175,7 @@ public class Bone {
         display.setTransformation(new Transformation(
                 new Vector3f(originX, originY, originZ),        // смещение
                 new Quaternionf(),                              // левый поворот
-                new Vector3f(1, 1, 1),                 // масштаб
+                new Vector3f(1 * 2, 1 * 2, 1 * 2),                 // масштаб
                 rotation                                        // правый поворот
         ));
 
