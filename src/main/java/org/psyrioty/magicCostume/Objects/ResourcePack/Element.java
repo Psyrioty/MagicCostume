@@ -30,6 +30,8 @@ public class Element {
     Texture upTexture;
     Texture downTexture;
 
+    List<Float> pivotPoint;
+
     public Element(
             List<Float> from,
             List<Float> to,
@@ -78,12 +80,14 @@ public class Element {
         this.from = from;
         this.to = to;
 
-        List<Float> origin = new ArrayList<>();
-        origin.add((float) 8);
-        origin.add((float) 0);
-        origin.add((float) 8);
+        this.rotationOrigin = rotationOrigin;
 
-        this.rotationOrigin = origin;
+        List<Float> pivot = new ArrayList<>();
+        pivot.add((float) 8);
+        pivot.add((float) 0);
+        pivot.add((float) 8);
+
+        this.pivotPoint = pivot;
 
         this.northFaces = northFaces;
         this.eastFaces = eastFaces;
@@ -138,6 +142,10 @@ public class Element {
         newValues.add(z);
 
         return newValues;
+    }
+
+    public List<Float> getPivotPoint() {
+        return pivotPoint;
     }
 
     public Texture getDownTexture() {

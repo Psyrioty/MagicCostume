@@ -97,10 +97,10 @@ public class ResourcePackBuilder {
         for (Element element : elements) {
             JsonObject jsonElement = new JsonObject();
 
-            List<Float> newVectorFrom = mathVec3(element.getFrom(), group.getOrigin(), element.getRotationOrigin());
+            List<Float> newVectorFrom = mathVec3(element.getFrom(), group.getOrigin(), element.getPivotPoint());
             jsonElement.add("from", vec3(newVectorFrom));
 
-            List<Float> newVectorTo = mathVec3(element.getTo(), group.getOrigin(), element.getRotationOrigin());
+            List<Float> newVectorTo = mathVec3(element.getTo(), group.getOrigin(), element.getPivotPoint());
             jsonElement.add("to", vec3(newVectorTo));
 
             JsonObject rotationObject = new JsonObject();
@@ -123,10 +123,10 @@ public class ResourcePackBuilder {
                     rotationObject.addProperty("angle", element.getRotationX());
                     rotationObject.addProperty("axis", "x");
                 }else if(isCoordinate == 2){
-                    rotationObject.addProperty("angle", element.getRotationX());
+                    rotationObject.addProperty("angle", element.getRotationY());
                     rotationObject.addProperty("axis", "y");
                 }else if(isCoordinate == 3){
-                    rotationObject.addProperty("angle", element.getRotationX());
+                    rotationObject.addProperty("angle", element.getRotationZ());
                     rotationObject.addProperty("axis", "z");
                 }
             }
@@ -139,7 +139,7 @@ public class ResourcePackBuilder {
 
             //List<Float> newRotationOrigin = mathVec3(element.getRotationOrigin(), group.getOrigin());
             //rotationObject.add("origin", vec3(newRotationOrigin));
-            rotationObject.add("origin", vec3(element.getRotationOrigin()));
+            rotationObject.add("origin", vec3(mathVec3(element.getRotationOrigin(), group.getOrigin(), element.getPivotPoint())));
             jsonElement.add("rotation", rotationObject);
 
             JsonObject faces = new JsonObject();
@@ -606,11 +606,11 @@ public class ResourcePackBuilder {
 
 
 
-    private static List<Float> mathVec3(List<Float> cubeVec, List<Float> boneVec, List<Float> origin){
+    private static List<Float> mathVec3(List<Float> cubeVec, List<Float> boneVec, List<Float> pivot){
         List<Float> newVector = new ArrayList<>();
-        float x = (cubeVec.getFirst() - boneVec.getFirst()) * 0.5f + origin.getFirst();
-        float y = (cubeVec.get(1) - boneVec.get(1)) * 0.5f + origin.get(1);
-        float z = (cubeVec.get(2) - boneVec.get(2)) * 0.5f + origin.get(2);
+        float x = (cubeVec.getFirst() - boneVec.getFirst()) * 0.5f + pivot.getFirst();
+        float y = (cubeVec.get(1) - boneVec.get(1)) * 0.5f + pivot.get(1);
+        float z = (cubeVec.get(2) - boneVec.get(2)) * 0.5f + pivot.get(2);
         newVector.add(x);
         newVector.add(y);
         newVector.add(z);
