@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class Bone {
+
     float originX, originY, originZ; //начальная точка привязки
     //float globalX, globalY, globalZ; //глобальная точка смещения
     float rotationX, rotationY, rotationZ; //поворот кости
@@ -27,6 +28,16 @@ public class Bone {
     UUID uuid; //идентификатор кости
     ItemDisplay boneEntity;
     Bone headBone;
+
+    //----------------АНИМАЦИЯ ЕБ***Я----------------------------------------
+    float animRotationX, animRotationY, animRotationZ;
+    float animPositionX, animPositionY, animPositionZ;
+    float animScaleX, animScaleY, animScaleZ;
+    //----------------для перерасчёта дочерних костей анимаций---------------
+    float addTranslateX, addTranslateY, addTranslateZ;
+    float addRotateX, addRotateY, addRotateZ;
+    float addScaleX, addScaleY, addScaleZ;
+    //=======================================================================
 
     Group group; //для формирования ресурспаков
 
@@ -58,6 +69,18 @@ public class Bone {
         this.rotationY = rotationY;
         this.rotationZ = rotationZ;
 
+        this.animPositionX = 0;
+        this.animPositionY = 0;
+        this.animPositionZ = 0;
+
+        this.animRotationX = 0;
+        this.animRotationY = 0;
+        this.animRotationZ = 0;
+
+        this.animScaleX = 1;
+        this.animScaleY = 1;
+        this.animScaleZ = 1;
+
         this.name = name;
 
         this.uuid = uuid;
@@ -65,6 +88,63 @@ public class Bone {
         this.group = group;
 
         this.modelName = modelName;
+    }
+
+    public float getAnimPositionX() {
+        return animPositionX;
+    }
+
+    public float getAnimPositionY() {
+        return animPositionY;
+    }
+
+    public float getAnimPositionZ() {
+        return animPositionZ;
+    }
+
+    public float getAnimRotationX() {
+        return animRotationX;
+    }
+
+    public float getAnimRotationY() {
+        return animRotationY;
+    }
+
+    public float getAnimRotationZ() {
+        return animRotationZ;
+    }
+
+    public float getAnimScaleX() {
+        return animScaleX;
+    }
+
+    public float getAnimScaleY() {
+        return animScaleY;
+    }
+
+    public float getAnimScaleZ() {
+        return animScaleZ;
+    }
+
+    //type = rotation, position, scale
+    public void mathAddAnimation(float x, float y, float z, String type){
+        switch (type){
+            case "rotation":
+                addRotateX += x;
+                addRotateY += y;
+                addRotateZ += z;
+                break;
+            case "position":
+                addTranslateX += x;
+                addTranslateY += y;
+                addTranslateZ += z;
+                break;
+            case "scale":
+                addScaleX += x;
+                addScaleY += y;
+                addScaleZ += z;
+                break;
+        }
     }
 
     public void setOriginX(float originX) {
@@ -77,6 +157,68 @@ public class Bone {
 
     public void setOriginZ(float originZ) {
         this.originZ = originZ;
+    }
+
+    public float getAddRotateX() {
+        return addRotateX;
+    }
+
+    public float getAddRotateY() {
+        return addRotateY;
+    }
+
+    public float getAddRotateZ() {
+        return addRotateZ;
+    }
+
+    public float getAddScaleX() {
+        return addScaleX;
+    }
+
+    public float getAddScaleY() {
+        return addScaleY;
+    }
+
+    public float getAddScaleZ() {
+        return addScaleZ;
+    }
+
+    public float getAddTranslateX() {
+        return addTranslateX;
+    }
+
+    public float getAddTranslateY() {
+        return addTranslateY;
+    }
+
+    public float getAddTranslateZ() {
+        return addTranslateZ;
+    }
+
+    public void clearAddTranslate(){
+        addTranslateX = 0;
+        addTranslateY = 0;
+        addTranslateZ = 0;
+    }
+
+    public void clearAddRotate(){
+        addRotateX = 0;
+        addRotateY = 0;
+        addRotateZ = 0;
+    }
+
+    public void clearAddScale(){
+        addScaleX = 0;
+        addScaleY = 0;
+        addScaleZ = 0;
+    }
+
+    public void setHeadBone(Bone headBone) {
+        this.headBone = headBone;
+    }
+
+    public Bone getHeadBone() {
+        return headBone;
     }
 
     public void addChildBone(Bone bone){

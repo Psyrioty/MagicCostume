@@ -35,6 +35,7 @@ public class ActiveCostume {
                     headBones.add(newHeadBone);
                 }else{
                     headBone.addChildBone(newHeadBone);
+                    newHeadBone.setHeadBone(headBone);
                 }
                 List<Bone> boneList = bone.getChildBones();
                 if(boneList.isEmpty()){
