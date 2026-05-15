@@ -441,9 +441,12 @@ public class Converter {
                 z = dataPoint.get("z").getAsFloat();
             }
 
-            if(channel.equals("rotation")){
+            if(
+                    channel.equals("rotation")
+                    || channel.equals("position")
+            ){
                 x *= -1;
-                y *= -1;
+                y *= 1;
                 z *= -1;
             }
 
@@ -500,13 +503,13 @@ public class Converter {
                 );
 
                 Bone bone = new Bone(
-                        origins.get(0) / 16,
+                        origins.get(0) / 16 * -1,
                         origins.get(1) / 16,
-                        origins.get(2) / 16,
+                        origins.get(2) / 16 * -1,
 
-                        rotations.get(0),
+                        rotations.get(0) * -1,
                         rotations.get(1),
-                        rotations.get(2),
+                        rotations.get(2) * -1,
 
                         name,
 

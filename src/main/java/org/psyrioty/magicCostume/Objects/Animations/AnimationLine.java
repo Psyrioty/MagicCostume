@@ -8,6 +8,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.util.Transformation;
 import org.joml.AxisAngle4f;
+import org.joml.Matrix3d;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.psyrioty.magicCostume.Objects.Bone;
@@ -51,10 +52,10 @@ public class AnimationLine {
             return;
         }
 
-        rotationTick(bone, tick);
         translateTick(bone, tick);
+        rotationTick(bone, tick);
 
-        doTransformation(bone);
+        //doTransformation(bone);
     }
 
     private void doTransformation(Bone bone){
@@ -210,11 +211,78 @@ public class AnimationLine {
     }
 
     private void rotate(Bone bone, float x, float y, float z) {
-        float rx = (float) Math.toRadians(((x % 360) + 360) % 360);
-        float ry = (float) Math.toRadians(((y % 360) + 360) % 360);
-        float rz = (float) Math.toRadians(((z % 360) + 360) % 360);
+        float rx = (float) Math.toRadians(x);
+        float ry = (float) Math.toRadians(y);
+        float rz = (float) Math.toRadians(z);
 
-        Quaternionf rotation = new Quaternionf().rotationXYZ(rx, ry, rz);
+        float addRx = (float) Math.toRadians(bone.getAddRotateX());
+        float addRy = (float) Math.toRadians(bone.getAddRotateY());
+        float addRz = (float) Math.toRadians(bone.getAddRotateZ());
+
+        Matrix3d matrixBad = new Matrix3d();
+        matrixBad.scale(
+                bone.getAnimScaleX(),
+                bone.getAnimScaleY(),
+                bone.getAnimScaleZ()
+        );
+
+        matrixBad.transform(
+                new Vector3f(
+                        bone.getAnimPositionX(),
+                        bone.getAnimPositionY(),
+                        bone.getAnimPositionZ()
+                )
+        );
+
+        matrixBad.rotate(
+                new Quaternionf().rotationXYZ(
+                        rx,
+                        ry,
+                        rz
+                )
+        );
+
+        Quaternionf rotation = new Quaternionf().
+                rotateLocalX(rx).
+                rotateLocalY(ry).
+                rotateLocalZ(rz).
+                mul(
+                        new Quaternionf().
+                                rotateLocalX(addRx).
+                                rotateLocalY(addRy).
+                                rotateLocalZ(addRz)
+                        );
+        Vector3f origin = new Vector3f(
+                bone.getOriginX(),
+                bone.getOriginY(),
+                bone.getOriginZ()
+        );
+
+        Vector3f addChild = new Vector3f(
+                bone.getAddTranslateX(),
+                bone.getAddTranslateY(),
+                bone.getAddTranslateZ()
+        );
+
+
+        Vector3f translate = new Vector3f(
+                bone.getAnimPositionX(),
+                bone.getAnimPositionY(),
+                bone.getAnimPositionZ()
+        );
+
+        translate.add(origin).add(addChild);
+
+        bone.getBoneEntity().setTransformation(
+                new Transformation(
+                        translate,
+                        rotation,
+                        new Vector3f(bone.getAnimScaleX(), bone.getAnimScaleY(), bone.getAnimScaleZ()),
+                        bone.getBoneEntity().getTransformation().getRightRotation()
+                )
+        );
+
+        /*Quaternionf rotation = new Quaternionf().rotationXYZ(rx, ry, rz);
 
         ItemDisplay boneEntity = bone.getBoneEntity();
         Transformation transformation = boneEntity.getTransformation();
@@ -233,7 +301,9 @@ public class AnimationLine {
                 .sub(rotatedPivot);
 
         Vector3f scale = new Vector3f(transformation.getScale());
-        Quaternionf rightRotation = new Quaternionf(transformation.getRightRotation());
+        Quaternionf rightRotation = new Quaternionf(transformation.getRightRotation());*/
+
+
     }
 
     private void translate(Bone bone, float x, float y, float z){
@@ -249,6 +319,12 @@ public class AnimationLine {
         Quaternionf leftRotation = new Quaternionf(transformation.getLeftRotation());
         Vector3f scale = new Vector3f(transformation.getScale());
         Quaternionf rightRotation = new Quaternionf(transformation.getRightRotation());
+
+        bone.setAnimPosition(
+                x,
+                y,
+                z
+                );
     }
 
     private void translateTick(Bone bone, int tick) {

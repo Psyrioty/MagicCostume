@@ -84,7 +84,7 @@ public class Element {
 
         List<Float> pivot = new ArrayList<>();
         pivot.add((float) 8);
-        pivot.add((float) 0);
+        pivot.add((float) 8);
         pivot.add((float) 8);
 
         this.pivotPoint = pivot;

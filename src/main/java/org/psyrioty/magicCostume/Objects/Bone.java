@@ -77,9 +77,9 @@ public class Bone {
         this.animRotationY = 0;
         this.animRotationZ = 0;
 
-        this.animScaleX = 1;
-        this.animScaleY = 1;
-        this.animScaleZ = 1;
+        this.animScaleX = 1 * 2;
+        this.animScaleY = 1 * 2;
+        this.animScaleZ = 1 * 2;
 
         this.name = name;
 
@@ -124,6 +124,12 @@ public class Bone {
 
     public float getAnimScaleZ() {
         return animScaleZ;
+    }
+
+    public void setAnimPosition(float x, float y, float z){
+        animPositionX = x;
+        animPositionY = y;
+        animPositionZ = z;
     }
 
     //type = rotation, position, scale
