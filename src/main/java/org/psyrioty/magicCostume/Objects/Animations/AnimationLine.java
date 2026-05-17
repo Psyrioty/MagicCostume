@@ -52,10 +52,12 @@ public class AnimationLine {
             return;
         }
 
-        translateTick(bone, tick);
+        //translateTick(bone, tick);
         rotationTick(bone, tick);
 
         //doTransformation(bone);
+
+
     }
 
     private void doTransformation(Bone bone){
@@ -119,12 +121,12 @@ public class AnimationLine {
 
     private void rotationTick(Bone bone, int tick){
         List<AnimationKey> animationKeys = getCurrentGapBetweenKeys(rotationKeys, tick);
-        float x = bone.getAddRotateX();
-        float y = bone.getAddRotateY();
-        float z = bone.getAddRotateZ();
+        float x = 0;
+        float y = 0;
+        float z = 0;
 
         if(animationKeys != null && !animationKeys.isEmpty()) {
-            x += mathValue(
+            x = mathValue(
                     animationKeys.getFirst().getX(),
                     animationKeys.getLast().getX(),
                     tick,
@@ -132,7 +134,7 @@ public class AnimationLine {
                     animationKeys.getLast().getTick()
             );
 
-            y += mathValue(
+            y = mathValue(
                     animationKeys.getFirst().getY(),
                     animationKeys.getLast().getY(),
                     tick,
@@ -140,7 +142,7 @@ public class AnimationLine {
                     animationKeys.getLast().getTick()
             );
 
-            z += mathValue(
+            z = mathValue(
                     animationKeys.getFirst().getZ(),
                     animationKeys.getLast().getZ(),
                     tick,
@@ -149,11 +151,10 @@ public class AnimationLine {
             );
         }
 
+        bone.setAnimRotation(x, y, z);
+
         rotate(
-                bone,
-                x,
-                y,
-                z
+                bone
         );
         bone.clearAddRotate();
         mathChildBonesAnim(x, y, z, "rotation", bone.getChildBones());
@@ -210,59 +211,25 @@ public class AnimationLine {
         return oldKeyValue + (actualityTick * stepValueInTick);
     }
 
-    private void rotate(Bone bone, float x, float y, float z) {
-        float rx = (float) Math.toRadians(x);
-        float ry = (float) Math.toRadians(y);
-        float rz = (float) Math.toRadians(z);
+    private void rotate(Bone bone) {
+        Quaternionf rotation = mathRootRotation(bone);
 
-        float addRx = (float) Math.toRadians(bone.getAddRotateX());
-        float addRy = (float) Math.toRadians(bone.getAddRotateY());
-        float addRz = (float) Math.toRadians(bone.getAddRotateZ());
+        Vector3f origin;
+        if(bone.getNewOrigin() == null) {
+            origin = new Vector3f(
+                    bone.getOriginX(),
+                    bone.getOriginY(),
+                    bone.getOriginZ()
+            );
+        }else{
+            origin = bone.getNewOrigin();
+        }
 
-        Matrix3d matrixBad = new Matrix3d();
-        matrixBad.scale(
-                bone.getAnimScaleX(),
-                bone.getAnimScaleY(),
-                bone.getAnimScaleZ()
-        );
-
-        matrixBad.transform(
-                new Vector3f(
-                        bone.getAnimPositionX(),
-                        bone.getAnimPositionY(),
-                        bone.getAnimPositionZ()
-                )
-        );
-
-        matrixBad.rotate(
-                new Quaternionf().rotationXYZ(
-                        rx,
-                        ry,
-                        rz
-                )
-        );
-
-        Quaternionf rotation = new Quaternionf().
-                rotateLocalX(rx).
-                rotateLocalY(ry).
-                rotateLocalZ(rz).
-                mul(
-                        new Quaternionf().
-                                rotateLocalX(addRx).
-                                rotateLocalY(addRy).
-                                rotateLocalZ(addRz)
-                        );
-        Vector3f origin = new Vector3f(
-                bone.getOriginX(),
-                bone.getOriginY(),
-                bone.getOriginZ()
-        );
-
-        Vector3f addChild = new Vector3f(
+        /*Vector3f addChild = new Vector3f(
                 bone.getAddTranslateX(),
                 bone.getAddTranslateY(),
                 bone.getAddTranslateZ()
-        );
+        );*/
 
 
         Vector3f translate = new Vector3f(
@@ -271,7 +238,9 @@ public class AnimationLine {
                 bone.getAnimPositionZ()
         );
 
-        translate.add(origin).add(addChild);
+        //translate.add(origin).add(addChild);
+
+        translate.add(origin);
 
         bone.getBoneEntity().setTransformation(
                 new Transformation(
@@ -281,6 +250,32 @@ public class AnimationLine {
                         bone.getBoneEntity().getTransformation().getRightRotation()
                 )
         );
+
+        Vector3f pivot;
+        if(bone.getNewOrigin() == null) {
+            pivot = new Vector3f(
+                    bone.getOriginX(),
+                    bone.getOriginY(),
+                    bone.getOriginZ()
+            );
+        }else{
+            pivot = new Vector3f(bone.getNewOrigin());
+        }
+
+        for(Bone boneChild: bone.getChildBones()) {
+
+            Vector3f offset = new Vector3f(
+                    boneChild.getOriginX(),
+                    boneChild.getOriginY(),
+                    boneChild.getOriginZ()
+            ).sub(pivot);
+
+            Vector3f newPoint = new Vector3f(offset)
+                    .rotate(rotation)
+                    .add(pivot);
+
+            boneChild.setNewOrigin(newPoint);
+        }
 
         /*Quaternionf rotation = new Quaternionf().rotationXYZ(rx, ry, rz);
 
@@ -302,8 +297,25 @@ public class AnimationLine {
 
         Vector3f scale = new Vector3f(transformation.getScale());
         Quaternionf rightRotation = new Quaternionf(transformation.getRightRotation());*/
+    }
 
+    private Quaternionf mathRootRotation(Bone bone){
 
+        Quaternionf localRotation = new Quaternionf().rotateXYZ(
+                (float) Math.toRadians(bone.getAnimRotationX()),
+                (float) Math.toRadians(bone.getAnimRotationY()),
+                (float) Math.toRadians(bone.getAnimRotationZ())
+        );
+
+        Bone headBone = bone.getHeadBone();
+
+        if(headBone == null){
+            return localRotation;
+        }
+
+        Quaternionf parentRotation = mathRootRotation(headBone);
+
+        return new Quaternionf(localRotation).mul(parentRotation);
     }
 
     private void translate(Bone bone, float x, float y, float z){

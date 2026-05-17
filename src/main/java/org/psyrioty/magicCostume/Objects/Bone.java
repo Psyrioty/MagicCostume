@@ -33,6 +33,8 @@ public class Bone {
     float animRotationX, animRotationY, animRotationZ;
     float animPositionX, animPositionY, animPositionZ;
     float animScaleX, animScaleY, animScaleZ;
+
+    Vector3f newOrigin;
     //----------------для перерасчёта дочерних костей анимаций---------------
     float addTranslateX, addTranslateY, addTranslateZ;
     float addRotateX, addRotateY, addRotateZ;
@@ -88,6 +90,14 @@ public class Bone {
         this.group = group;
 
         this.modelName = modelName;
+    }
+
+    public void setNewOrigin(Vector3f newOrigin) {
+        this.newOrigin = newOrigin;
+    }
+
+    public Vector3f getNewOrigin() {
+        return newOrigin;
     }
 
     public float getAnimPositionX() {
@@ -151,6 +161,12 @@ public class Bone {
                 addScaleZ += z;
                 break;
         }
+    }
+
+    public void setAnimRotation(float x, float y, float z){
+        animRotationX = x;
+        animRotationY = y;
+        animRotationZ = z;
     }
 
     public void setOriginX(float originX) {
@@ -312,6 +328,8 @@ public class Bone {
         ItemDisplay display = world.spawn(location, ItemDisplay.class, entity -> {
             entity.setItemStack(itemStack);
         });
+
+        display.setInterpolationDuration(1);
 
         Quaternionf rotation = new Quaternionf()
                 .rotateXYZ(
