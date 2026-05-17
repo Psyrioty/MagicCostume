@@ -100,6 +100,18 @@ public class Bone {
         return newOrigin;
     }
 
+    public float getRotationZ() {
+        return rotationZ;
+    }
+
+    public float getRotationY() {
+        return rotationY;
+    }
+
+    public float getRotationX() {
+        return rotationX;
+    }
+
     public float getAnimPositionX() {
         return animPositionX;
     }
@@ -310,6 +322,7 @@ public class Bone {
         World world = target.getWorld();
         Location location = target.getLocation();
         location.setPitch(0);
+        location.setYaw(0);
 
         ItemStack itemStack = new ItemStack(Material.WHITE_WOOL);
         ItemMeta meta = itemStack.getItemMeta();
@@ -330,6 +343,7 @@ public class Bone {
         });
 
         display.setInterpolationDuration(1);
+        display.setPersistent(false);
 
         Quaternionf rotation = new Quaternionf()
                 .rotateXYZ(

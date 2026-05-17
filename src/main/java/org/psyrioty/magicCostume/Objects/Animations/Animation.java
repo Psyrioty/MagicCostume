@@ -1,5 +1,6 @@
 package org.psyrioty.magicCostume.Objects.Animations;
 
+import org.bukkit.entity.Entity;
 import org.psyrioty.magicCostume.Objects.Bone;
 
 import java.util.ArrayList;
@@ -36,9 +37,9 @@ public class Animation {
         return uuid;
     }
 
-    public void animationTick(List<Bone> bones){
+    public void animationTick(List<Bone> bones, Entity target){
         for(AnimationLine animationLine: animationLines){
-            animationLine.animationTick(tick, bones);
+            animationLine.animationTick(tick, bones, target);
         }
         tick++;
         if(tick > length){

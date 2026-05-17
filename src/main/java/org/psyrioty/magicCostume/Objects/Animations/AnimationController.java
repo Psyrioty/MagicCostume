@@ -1,6 +1,7 @@
 package org.psyrioty.magicCostume.Objects.Animations;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Entity;
 import org.psyrioty.magicCostume.MagicCostume;
 import org.psyrioty.magicCostume.Objects.Bone;
 
@@ -17,10 +18,10 @@ public class AnimationController {
         this.animationStates = MagicCostume.getPlugin().getAnimationStateList();
     }
 
-    public void animationTick(List<Bone> bones){
+    public void animationTick(List<Bone> bones, Entity target){
         for(Animation animation: animations){
             if(animation.getName().equals("idle")){
-                animation.animationTick(bones);
+                animation.animationTick(bones, target);
             }
         }
     }

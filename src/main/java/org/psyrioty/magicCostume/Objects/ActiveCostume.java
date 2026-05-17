@@ -73,8 +73,9 @@ public class ActiveCostume {
     }
 
     public void animationTick(){
-        animationController.animationTick(headBones);
-        //clearNewOriginBones(headBones);
+        animationController.animationTick(headBones, target);
+
+        clearNewOriginBones(headBones);
     }
 
 
@@ -86,8 +87,8 @@ public class ActiveCostume {
 
         for(Bone bone: bones){
             bone.setNewOrigin(null);
+            clearNewOriginBones(bone.getChildBones());
         }
 
-        clearNewOriginBones(bones);
     }
 }

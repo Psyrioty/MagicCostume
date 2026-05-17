@@ -1,14 +1,9 @@
 package org.psyrioty.magicCostume.Objects.Animations;
 
-//Это типо линия анимации для отдельной кости
-//пупупууу
-
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.util.Transformation;
-import org.joml.AxisAngle4f;
-import org.joml.Matrix3d;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.psyrioty.magicCostume.Objects.Bone;
@@ -18,114 +13,139 @@ import java.util.List;
 import java.util.UUID;
 
 public class AnimationLine {
-    List<AnimationKey> rotationKeys = new ArrayList<>();
-    List<AnimationKey> scaleKeys = new ArrayList<>();
-    List<AnimationKey> translateKeys = new ArrayList<>();
-    UUID uuidBone;
+    private final List<AnimationKey> rotationKeys = new ArrayList<>();
+    private final List<AnimationKey> scaleKeys = new ArrayList<>();
+    private final List<AnimationKey> translateKeys = new ArrayList<>();
+    private final UUID uuidBone;
 
-    public AnimationLine(
-            UUID uuidBone,
-            List<AnimationKey> animationKeys
-    ){
+    public AnimationLine(UUID uuidBone, List<AnimationKey> animationKeys) {
         this.uuidBone = uuidBone;
-        //this.animationKeys = animationKeys;
 
-        for(AnimationKey animationKey: animationKeys){
-            switch (animationKey.getTypeKey()){
-                case "rotation":
-                    rotationKeys.add(animationKey);
-                    break;
-                case "position":
-                    translateKeys.add(animationKey);
-                    break;
-                case "scale":
-                    scaleKeys.add(animationKey);
-                    break;
+        for (AnimationKey animationKey : animationKeys) {
+            switch (animationKey.getTypeKey()) {
+                case "rotation" -> rotationKeys.add(animationKey);
+                case "position" -> translateKeys.add(animationKey);
+                case "scale" -> scaleKeys.add(animationKey);
             }
         }
     }
 
-    public void animationTick(int tick, List<Bone> bones){
-        Bone bone = getNeedBone(bones);
-
-        if(bone == null){
+    public void animationTick(int tick, List<Bone> bones, Entity target) {
+        Bone animatedBone = getNeedBone(bones);
+        if (animatedBone == null) {
             return;
         }
 
-        //translateTick(bone, tick);
-        rotationTick(bone, tick);
+        rotationTick(animatedBone, tick, target);
+        translateTick(animatedBone, tick);
 
-        //doTransformation(bone);
+        Bone root = animatedBone;
+        while (root.getHeadBone() != null) {
+            root = root.getHeadBone();
+        }
 
-
+        applyBoneRecursive(
+                root,
+                new Vector3f(0, 0, 0),
+                new Quaternionf(),
+                new Vector3f(0, 0, 0)
+        );
     }
 
-    private void doTransformation(Bone bone){
-        ItemDisplay boneEntity = bone.getBoneEntity();
-        Transformation transformation = boneEntity.getTransformation();
-        Quaternionf rightRotation = new Quaternionf(transformation.getRightRotation());
-        Vector3f translation = new Vector3f(bone.getAnimPositionX(), bone.getAnimPositionY(), bone.getAnimPositionZ());
-        Quaternionf rotation = new Quaternionf().rotationXYZ(bone.getAnimRotationX(), bone.getAnimRotationY(), bone.getAnimRotationZ());
-        Vector3f scale = new Vector3f(bone.getAnimScaleX(), bone.getAnimScaleY(), bone.getAnimScaleZ());
+    private void applyBoneRecursive(
+            Bone bone,
+            Vector3f parentWorldPos,
+            Quaternionf parentWorldRot,
+            Vector3f parentBindOrigin
+    ) {
+        if (bone == null || bone.getBoneEntity() == null) {
+            return;
+        }
 
-        boneEntity.setTransformation(new Transformation(
-                translation,
-                rotation,
-                scale,
-                rightRotation
+        Vector3f bindOrigin = new Vector3f(
+                bone.getOriginX(),
+                bone.getOriginY(),
+                bone.getOriginZ()
+        );
+
+        Quaternionf bindRotation = new Quaternionf().rotateXYZ(
+                (float) Math.toRadians(bone.getRotationX()),
+                (float) Math.toRadians(bone.getRotationY()),
+                (float) Math.toRadians(bone.getRotationZ())
+        );
+
+        Quaternionf animRotation = new Quaternionf().rotateXYZ(
+                (float) Math.toRadians(bone.getAnimRotationX()),
+                (float) Math.toRadians(bone.getAnimRotationY()),
+                (float) Math.toRadians(bone.getAnimRotationZ())
+        );
+
+        Quaternionf localRotation = new Quaternionf(bindRotation).mul(animRotation);
+        Quaternionf worldRotation = new Quaternionf(parentWorldRot).mul(localRotation);
+
+        Vector3f localOffset = new Vector3f(bindOrigin)
+                .sub(parentBindOrigin)
+                .add(
+                        bone.getAnimPositionX(),
+                        bone.getAnimPositionY(),
+                        bone.getAnimPositionZ()
+                );
+
+        Vector3f worldPos = new Vector3f(localOffset)
+                .rotate(parentWorldRot)
+                .add(parentWorldPos);
+
+        ItemDisplay display = bone.getBoneEntity();
+        Transformation old = display.getTransformation();
+
+        display.setTransformation(new Transformation(
+                worldPos,
+                worldRotation,
+                new Vector3f(
+                        bone.getAnimScaleX(),
+                        bone.getAnimScaleY(),
+                        bone.getAnimScaleZ()
+                ),
+                old.getRightRotation()
         ));
-    }
 
-    //type = rotation, scale, position
-    private void mathChildBonesAnim(float x, float y, float z, String type, List<Bone> bonesChild){
-        if(bonesChild == null){
-            return;
-        }
-        if(bonesChild.isEmpty()){
-            return;
-        }
-
-        for(Bone boneChild: bonesChild){
-            boneChild.mathAddAnimation(x, y, z, type);
-
-            mathChildBonesAnim(x, y, z, type, boneChild.getChildBones());
+        for (Bone child : bone.getChildBones()) {
+            applyBoneRecursive(child, worldPos, worldRotation, bindOrigin);
         }
     }
 
-    private Bone getNeedBone(List<Bone> bones){
-
-        try{
-            for(Bone bone: bones){
-                if(bone.getUuid().equals(uuidBone)){
+    private Bone getNeedBone(List<Bone> bones) {
+        try {
+            for (Bone bone : bones) {
+                if (bone.getUuid().equals(uuidBone)) {
                     return bone;
                 }
+
                 List<Bone> childBones = bone.getChildBones();
-                if(childBones == null){
-                    continue;
-                }
-                if(childBones.isEmpty()){
+                if (childBones == null || childBones.isEmpty()) {
                     continue;
                 }
 
                 Bone boneNeed = getNeedBone(childBones);
-                if(boneNeed != null){
+                if (boneNeed != null) {
                     return boneNeed;
                 }
             }
-        }catch (Exception exception){
+        } catch (Exception exception) {
             Bukkit.getLogger().severe("MagicCostume error AnimationLine.java getNeedBone() " + exception.getMessage());
         }
 
         return null;
     }
 
-    private void rotationTick(Bone bone, int tick){
+    private void rotationTick(Bone bone, int tick, Entity target) {
         List<AnimationKey> animationKeys = getCurrentGapBetweenKeys(rotationKeys, tick);
+
         float x = 0;
         float y = 0;
         float z = 0;
 
-        if(animationKeys != null && !animationKeys.isEmpty()) {
+        if (animationKeys != null && !animationKeys.isEmpty()) {
             x = mathValue(
                     animationKeys.getFirst().getX(),
                     animationKeys.getLast().getX(),
@@ -151,203 +171,23 @@ public class AnimationLine {
             );
         }
 
+
+        Bukkit.getLogger().info(target.getYaw() + "");
+        if(bone.getHeadBone() == null){
+            y -= target.getYaw();
+        }
         bone.setAnimRotation(x, y, z);
-
-        rotate(
-                bone
-        );
-        bone.clearAddRotate();
-        mathChildBonesAnim(x, y, z, "rotation", bone.getChildBones());
-    }
-
-    private List<AnimationKey> getCurrentGapBetweenKeys(List<AnimationKey> animationKeys, int tick){
-        AnimationKey oldKey = null;
-        AnimationKey nextKey = null;
-        for(AnimationKey animationKey: animationKeys){
-            if(animationKey.getTick() <= tick) {
-                if (oldKey == null) {
-                    oldKey = animationKey;
-                }else if (oldKey.getTick() < animationKey.getTick()){
-                    oldKey = animationKey;
-                }
-            }
-
-            if(animationKey.getTick() >= tick){
-                if(nextKey == null) {
-                    nextKey = animationKey;
-                }else if (nextKey.getTick() > animationKey.getTick()){
-                    nextKey = animationKey;
-                }
-            }
-        }
-
-        if(oldKey == null || nextKey == null){
-            return null;
-        }
-
-        List<AnimationKey> animationKeyList = new ArrayList<>();
-
-        animationKeyList.add(oldKey);
-        animationKeyList.add(nextKey);
-
-        return animationKeyList;
-    }
-
-    private float mathValue(
-            float oldKeyValue, float nextKeyValue,
-            int tick,
-            int oldKeyTick, int nextKeyTick
-    ){
-        int differenceTick = nextKeyTick - oldKeyTick;
-        float differenceValue = nextKeyValue - oldKeyValue;
-
-        float stepValueInTick = 0;
-        if(differenceTick != 0) {
-            stepValueInTick = differenceValue / differenceTick;
-        }
-
-        int actualityTick = tick - oldKeyTick;
-
-        return oldKeyValue + (actualityTick * stepValueInTick);
-    }
-
-    private void rotate(Bone bone) {
-        Quaternionf rotation = mathRootRotation(bone);
-
-        Vector3f origin;
-        if(bone.getNewOrigin() == null) {
-            origin = new Vector3f(
-                    bone.getOriginX(),
-                    bone.getOriginY(),
-                    bone.getOriginZ()
-            );
-        }else{
-            origin = bone.getNewOrigin();
-        }
-
-        /*Vector3f addChild = new Vector3f(
-                bone.getAddTranslateX(),
-                bone.getAddTranslateY(),
-                bone.getAddTranslateZ()
-        );*/
-
-
-        Vector3f translate = new Vector3f(
-                bone.getAnimPositionX(),
-                bone.getAnimPositionY(),
-                bone.getAnimPositionZ()
-        );
-
-        //translate.add(origin).add(addChild);
-
-        translate.add(origin);
-
-        bone.getBoneEntity().setTransformation(
-                new Transformation(
-                        translate,
-                        rotation,
-                        new Vector3f(bone.getAnimScaleX(), bone.getAnimScaleY(), bone.getAnimScaleZ()),
-                        bone.getBoneEntity().getTransformation().getRightRotation()
-                )
-        );
-
-        Vector3f pivot;
-        if(bone.getNewOrigin() == null) {
-            pivot = new Vector3f(
-                    bone.getOriginX(),
-                    bone.getOriginY(),
-                    bone.getOriginZ()
-            );
-        }else{
-            pivot = new Vector3f(bone.getNewOrigin());
-        }
-
-        for(Bone boneChild: bone.getChildBones()) {
-
-            Vector3f offset = new Vector3f(
-                    boneChild.getOriginX(),
-                    boneChild.getOriginY(),
-                    boneChild.getOriginZ()
-            ).sub(pivot);
-
-            Vector3f newPoint = new Vector3f(offset)
-                    .rotate(rotation)
-                    .add(pivot);
-
-            boneChild.setNewOrigin(newPoint);
-        }
-
-        /*Quaternionf rotation = new Quaternionf().rotationXYZ(rx, ry, rz);
-
-        ItemDisplay boneEntity = bone.getBoneEntity();
-        Transformation transformation = boneEntity.getTransformation();
-
-        Vector3f pivot = new Vector3f(
-                bone.getOriginX(),
-                bone.getOriginY(),
-                bone.getOriginZ()
-        );
-
-        Vector3f rotatedPivot = new Vector3f(pivot);
-        rotation.transform(rotatedPivot);
-
-        Vector3f translation = new Vector3f(transformation.getTranslation())
-                .add(pivot)
-                .sub(rotatedPivot);
-
-        Vector3f scale = new Vector3f(transformation.getScale());
-        Quaternionf rightRotation = new Quaternionf(transformation.getRightRotation());*/
-    }
-
-    private Quaternionf mathRootRotation(Bone bone){
-
-        Quaternionf localRotation = new Quaternionf().rotateXYZ(
-                (float) Math.toRadians(bone.getAnimRotationX()),
-                (float) Math.toRadians(bone.getAnimRotationY()),
-                (float) Math.toRadians(bone.getAnimRotationZ())
-        );
-
-        Bone headBone = bone.getHeadBone();
-
-        if(headBone == null){
-            return localRotation;
-        }
-
-        Quaternionf parentRotation = mathRootRotation(headBone);
-
-        return new Quaternionf(localRotation).mul(parentRotation);
-    }
-
-    private void translate(Bone bone, float x, float y, float z){
-        ItemDisplay boneEntity = bone.getBoneEntity();
-        Transformation transformation = boneEntity.getTransformation();
-
-        Vector3f translation = new Vector3f(
-                bone.getOriginX() + x,
-                bone.getOriginY() + y,
-                bone.getOriginZ() + z
-        );
-
-        Quaternionf leftRotation = new Quaternionf(transformation.getLeftRotation());
-        Vector3f scale = new Vector3f(transformation.getScale());
-        Quaternionf rightRotation = new Quaternionf(transformation.getRightRotation());
-
-        bone.setAnimPosition(
-                x,
-                y,
-                z
-                );
     }
 
     private void translateTick(Bone bone, int tick) {
         List<AnimationKey> animationKeys = getCurrentGapBetweenKeys(translateKeys, tick);
 
-        float x = bone.getAddTranslateX();
-        float y = bone.getAddTranslateY();
-        float z = bone.getAddTranslateZ();
+        float x = 0;
+        float y = 0;
+        float z = 0;
 
         if (animationKeys != null && !animationKeys.isEmpty()) {
-            x += mathValue(
+            x = mathValue(
                     animationKeys.getFirst().getX(),
                     animationKeys.getLast().getX(),
                     tick,
@@ -355,7 +195,7 @@ public class AnimationLine {
                     animationKeys.getLast().getTick()
             );
 
-            y += mathValue(
+            y = mathValue(
                     animationKeys.getFirst().getY(),
                     animationKeys.getLast().getY(),
                     tick,
@@ -363,7 +203,7 @@ public class AnimationLine {
                     animationKeys.getLast().getTick()
             );
 
-            z += mathValue(
+            z = mathValue(
                     animationKeys.getFirst().getZ(),
                     animationKeys.getLast().getZ(),
                     tick,
@@ -372,23 +212,47 @@ public class AnimationLine {
             );
         }
 
-        translate(
-                bone,
-                x,
-                y,
-                z
-        );
+        bone.setAnimPosition(x, y, z);
+    }
 
+    private List<AnimationKey> getCurrentGapBetweenKeys(List<AnimationKey> animationKeys, int tick) {
+        AnimationKey oldKey = null;
+        AnimationKey nextKey = null;
 
-        Bukkit.getLogger().info(
-                bone.getName() + " " +
-                        "X: " + x + " add " + bone.getAddTranslateX() + " origin " + bone.getOriginX() + " " +
-                        "Y: " + y + " add " + bone.getAddTranslateY() + " origin " + bone.getOriginY() + " " +
-                        "Z: " + z + " add " + bone.getAddTranslateZ() + " origin " + bone.getOriginZ()
-        );
+        for (AnimationKey animationKey : animationKeys) {
+            if (animationKey.getTick() <= tick) {
+                if (oldKey == null || oldKey.getTick() < animationKey.getTick()) {
+                    oldKey = animationKey;
+                }
+            }
 
-        bone.clearAddTranslate();
+            if (animationKey.getTick() >= tick) {
+                if (nextKey == null || nextKey.getTick() > animationKey.getTick()) {
+                    nextKey = animationKey;
+                }
+            }
+        }
 
-        mathChildBonesAnim(x, y, z, "position", bone.getChildBones());
+        if (oldKey == null || nextKey == null) {
+            return null;
+        }
+
+        List<AnimationKey> animationKeyList = new ArrayList<>(2);
+        animationKeyList.add(oldKey);
+        animationKeyList.add(nextKey);
+        return animationKeyList;
+    }
+
+    private float mathValue(float oldKeyValue, float nextKeyValue, int tick, int oldKeyTick, int nextKeyTick) {
+        int differenceTick = nextKeyTick - oldKeyTick;
+        float differenceValue = nextKeyValue - oldKeyValue;
+
+        float stepValueInTick = 0;
+        if (differenceTick != 0) {
+            stepValueInTick = differenceValue / differenceTick;
+        }
+
+        int actualityTick = tick - oldKeyTick;
+        return oldKeyValue + (actualityTick * stepValueInTick);
     }
 }
