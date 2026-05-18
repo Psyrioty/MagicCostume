@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.bukkit.Bukkit;
+import org.bukkit.block.data.type.Switch;
 import org.psyrioty.magicCostume.MagicCostume;
 import org.psyrioty.magicCostume.Objects.Animations.Animation;
 import org.psyrioty.magicCostume.Objects.Animations.AnimationController;
@@ -312,6 +313,7 @@ public class Converter {
                 int length = (int) (jsonAnimation.get("length").getAsFloat() * 20);
 
                 String loopString = getKeyValue(String.valueOf(jsonAnimation), "loop");
+                loopString = loopString.replaceAll("\"", "");
                 boolean loop = false;
                 if(loopString.equals("loop")){
                     loop = true;
@@ -323,12 +325,42 @@ public class Converter {
                     continue;
                 }
 
+                int weight = 0; //вес для анимаций
+
+                switch(name){
+                    case "idle":
+                        weight = 99999;
+                        break;
+                    case "walk":
+                        weight = 7;
+                        break;
+                    case "jump":
+                        weight = 1;
+                        break;
+                    case "fly":
+                        weight = 3;
+                        break;
+                    case "jump_end":
+                        weight = 2;
+                        break;
+                    case "elytra":
+                        weight = 4;
+                        break;
+                    case "swim":
+                        weight = 5;
+                        break;
+                    case "crawl":
+                        weight = 6;
+                        break;
+                }
+
                 Animation animation = new Animation(
                         name,
                         uuid,
                         loop,
                         animationLines,
-                        length
+                        length,
+                        weight
                 );
                 animationList.add(animation);
             }

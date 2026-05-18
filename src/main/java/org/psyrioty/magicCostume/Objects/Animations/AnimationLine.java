@@ -171,8 +171,6 @@ public class AnimationLine {
             );
         }
 
-
-        Bukkit.getLogger().info(target.getYaw() + "");
         if(bone.getHeadBone() == null){
             y -= target.getYaw();
         }

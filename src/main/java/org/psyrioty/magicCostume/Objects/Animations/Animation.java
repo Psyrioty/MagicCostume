@@ -4,6 +4,7 @@ import org.bukkit.entity.Entity;
 import org.psyrioty.magicCostume.Objects.Bone;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,19 +15,33 @@ public class Animation {
     boolean loop; //true - зациклен, false - запуск один раз
     int tick = 0; //тик хранит в себе данный тик анимации
     int length; //длина анимации
+    boolean enable; //включена ли анимация
+
+    int weight; //вес анимации, чем ниже, тем больше приоритет
 
     public Animation(
             String name,
             UUID uuid,
             boolean loop,
             List<AnimationLine> animationLines,
-            int length
+            int length,
+            int weight
     ){
         this.name = name;
         this.uuid = uuid;
         this.loop = loop;
         this.animationLines = animationLines;
         this.length = length;
+
+        this.weight = weight;
+
+        enable = name.equals("idle");
+    }
+
+    public void setEnable(boolean enable) {
+        if(this.enable != enable) {
+            this.enable = enable;
+        }
     }
 
     public String getName() {
@@ -44,6 +59,17 @@ public class Animation {
         tick++;
         if(tick > length){
             tick = 0;
+            if(!loop && enable){
+                enable = false;
+            }
         }
+    }
+
+    public int getWeight() {
+        return weight;
+    }
+
+    public boolean isEnable() {
+        return enable;
     }
 }

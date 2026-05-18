@@ -1,10 +1,13 @@
 package org.psyrioty.magicCostume.Objects;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Entity;
+import org.bukkit.util.Vector;
 import org.psyrioty.magicCostume.MagicCostume;
 import org.psyrioty.magicCostume.Objects.Animations.Animation;
 import org.psyrioty.magicCostume.Objects.Animations.AnimationController;
+import org.psyrioty.magicCostume.Objects.Player.ActiveEntity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,18 +16,27 @@ public class ActiveCostume {
     Entity target;
     List<Bone> headBones = new ArrayList<>();
     AnimationController animationController;
+    ActiveEntity activeEntity;
 
     public ActiveCostume(
             Entity target,
-            Costume costume
+            Costume costume,
+            ActiveEntity activeEntity
     ){
         this.target = target;
         getHeadBones(costume.getHeadBones(), null);
         this.animationController = costume.getAnimationController();
 
+
+        this.activeEntity = activeEntity;
+
         Spawn();
 
         MagicCostume.getPlugin().getActiveCostumes().add(this);
+    }
+
+    public AnimationController getAnimationController() {
+        return animationController;
     }
 
     private void getHeadBones(List<Bone> bones, Bone headBone){
@@ -73,9 +85,35 @@ public class ActiveCostume {
     }
 
     public void animationTick(){
+        walk(activeEntity, target);
         animationController.animationTick(headBones, target);
 
         clearNewOriginBones(headBones);
+    }
+
+    private void walk(ActiveEntity activeEntity, Entity entity){
+
+        Vector velocity = entity.getVelocity();
+        Bukkit.getLogger().info(velocity.toString());
+
+        Location location = entity.getLocation();
+        boolean moving = activeEntity.getX() != location.getX() ||
+                activeEntity.getZ() != location.getZ();
+
+        activeEntity.setLocation(
+                location.getWorld(),
+                location.getX(),
+                location.getY(),
+                location.getZ()
+        );
+
+        for (ActiveCostume activeCostume : activeEntity.getActiveCostumes()) {
+            for (Animation animation : activeCostume.getAnimationController().getAnimations()) {
+                if(animation.getName().equals("walk")){
+                    animation.setEnable(moving);
+                }
+            }
+        }
     }
 
 

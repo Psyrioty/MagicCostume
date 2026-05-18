@@ -8,7 +8,9 @@ import org.jetbrains.annotations.NotNull;
 import org.psyrioty.magicCostume.MagicCostume;
 import org.psyrioty.magicCostume.Objects.ActiveCostume;
 import org.psyrioty.magicCostume.Objects.Costume;
+import org.psyrioty.magicCostume.Objects.Player.ActiveEntity;
 
+import java.util.ArrayList;
 import java.util.Set;
 
 public class MainPluginCommands implements CommandExecutor {
@@ -23,10 +25,25 @@ public class MainPluginCommands implements CommandExecutor {
         Set<Costume> costumeList = MagicCostume.getPlugin().getCostumes();
         for(Costume costume: costumeList){
             if(costume.getName().equals(args[0])){
+
+                ActiveEntity activeEntity = MagicCostume.getPlugin().findActiveEntity(player);
+
+                if(activeEntity == null){
+                    activeEntity = new ActiveEntity(
+                            player
+                    );
+                }
+
                 ActiveCostume activeCostume = new ActiveCostume(
                         player,
-                        costume
+                        costume,
+                        activeEntity
                 );
+
+                activeEntity.addActiveCostume(activeCostume);
+
+                MagicCostume.getPlugin().getActiveCostumes().add(activeCostume);
+                MagicCostume.getPlugin().getActiveEntities().add(activeEntity);
                 return true;
             }
         }
