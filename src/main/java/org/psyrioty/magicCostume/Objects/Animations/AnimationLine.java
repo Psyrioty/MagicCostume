@@ -3,6 +3,7 @@ package org.psyrioty.magicCostume.Objects.Animations;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
+import org.bukkit.entity.Player;
 import org.bukkit.util.Transformation;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -36,7 +37,8 @@ public class AnimationLine {
             return;
         }
 
-        rotationTick(animatedBone, tick, target);
+        scaleTick(animatedBone, tick);
+        rotationTick(animatedBone, tick);
         translateTick(animatedBone, tick);
 
         Bone root = animatedBone;
@@ -44,10 +46,21 @@ public class AnimationLine {
             root = root.getHeadBone();
         }
 
+        float targetYawRadians = (float) Math.toRadians(-target.getLocation().getYaw());
+        Quaternionf targetRotation = new Quaternionf().rotateY(targetYawRadians);
+
+        if(target instanceof Player player){
+            if(player.isGliding() || player.isSwimming()){
+                float targetPitchRadians = (float) Math.toRadians(player.getLocation().getPitch() + 90);
+                targetRotation.rotateX(targetPitchRadians);
+            }
+        }
+
         applyBoneRecursive(
                 root,
                 new Vector3f(0, 0, 0),
-                new Quaternionf(),
+                targetRotation,
+                new Vector3f(2f, 2f, 2f),
                 new Vector3f(0, 0, 0)
         );
     }
@@ -56,6 +69,7 @@ public class AnimationLine {
             Bone bone,
             Vector3f parentWorldPos,
             Quaternionf parentWorldRot,
+            Vector3f parentWorldScale,
             Vector3f parentBindOrigin
     ) {
         if (bone == null || bone.getBoneEntity() == null) {
@@ -68,20 +82,26 @@ public class AnimationLine {
                 bone.getOriginZ()
         );
 
-        Quaternionf bindRotation = new Quaternionf().rotateXYZ(
-                (float) Math.toRadians(bone.getRotationX()),
-                (float) Math.toRadians(bone.getRotationY()),
-                (float) Math.toRadians(bone.getRotationZ())
-        );
+        Quaternionf bindRotation = new Quaternionf()
+                .rotateZ((float) Math.toRadians(bone.getRotationZ()))
+                .rotateY((float) Math.toRadians(bone.getRotationY()))
+                .rotateX((float) Math.toRadians(bone.getRotationX()));
 
-        Quaternionf animRotation = new Quaternionf().rotateXYZ(
-                (float) Math.toRadians(bone.getAnimRotationX()),
-                (float) Math.toRadians(bone.getAnimRotationY()),
-                (float) Math.toRadians(bone.getAnimRotationZ())
-        );
+        Quaternionf animRotation = new Quaternionf()
+                .rotateZ((float) Math.toRadians(bone.getAnimRotationZ()))
+                .rotateY((float) Math.toRadians(bone.getAnimRotationY()))
+                .rotateX((float) Math.toRadians(bone.getAnimRotationX()));
 
-        Quaternionf localRotation = new Quaternionf(bindRotation).mul(animRotation);
+        Quaternionf localRotation = new Quaternionf(animRotation).mul(bindRotation);
         Quaternionf worldRotation = new Quaternionf(parentWorldRot).mul(localRotation);
+
+        float animScaleX = bone.getAnimScaleX() == 0 ? 1 : bone.getAnimScaleX();
+        float animScaleY = bone.getAnimScaleY() == 0 ? 1 : bone.getAnimScaleY();
+        float animScaleZ = bone.getAnimScaleZ() == 0 ? 1 : bone.getAnimScaleZ();
+
+        Vector3f localScale = new Vector3f(animScaleX, animScaleY, animScaleZ);
+
+        Vector3f worldScale = new Vector3f(parentWorldScale).mul(localScale);
 
         Vector3f localOffset = new Vector3f(bindOrigin)
                 .sub(parentBindOrigin)
@@ -89,7 +109,8 @@ public class AnimationLine {
                         bone.getAnimPositionX(),
                         bone.getAnimPositionY(),
                         bone.getAnimPositionZ()
-                );
+                )
+                .mul(new Vector3f(parentWorldScale).div(2.0f));
 
         Vector3f worldPos = new Vector3f(localOffset)
                 .rotate(parentWorldRot)
@@ -101,16 +122,12 @@ public class AnimationLine {
         display.setTransformation(new Transformation(
                 worldPos,
                 worldRotation,
-                new Vector3f(
-                        bone.getAnimScaleX(),
-                        bone.getAnimScaleY(),
-                        bone.getAnimScaleZ()
-                ),
+                worldScale,
                 old.getRightRotation()
         ));
 
         for (Bone child : bone.getChildBones()) {
-            applyBoneRecursive(child, worldPos, worldRotation, bindOrigin);
+            applyBoneRecursive(child, worldPos, worldRotation, worldScale, bindOrigin);
         }
     }
 
@@ -138,7 +155,7 @@ public class AnimationLine {
         return null;
     }
 
-    private void rotationTick(Bone bone, int tick, Entity target) {
+    private void rotationTick(Bone bone, int tick) {
         List<AnimationKey> animationKeys = getCurrentGapBetweenKeys(rotationKeys, tick);
 
         float x = 0;
@@ -171,10 +188,47 @@ public class AnimationLine {
             );
         }
 
-        if(bone.getHeadBone() == null){
-            y -= target.getYaw();
-        }
+        //if(bone.getHeadBone() == null){
+        //    y -= target.getYaw();
+        //}
         bone.setAnimRotation(x, y, z);
+    }
+
+
+    private void scaleTick(Bone bone, int tick) {
+        List<AnimationKey> animationKeys = getCurrentGapBetweenKeys(scaleKeys, tick);
+
+        float x = 1;
+        float y = 1;
+        float z = 1;
+
+        if (animationKeys != null && !animationKeys.isEmpty()) {
+            x = mathValue(
+                    animationKeys.getFirst().getX(),
+                    animationKeys.getLast().getX(),
+                    tick,
+                    animationKeys.getFirst().getTick(),
+                    animationKeys.getLast().getTick()
+            );
+
+            y = mathValue(
+                    animationKeys.getFirst().getY(),
+                    animationKeys.getLast().getY(),
+                    tick,
+                    animationKeys.getFirst().getTick(),
+                    animationKeys.getLast().getTick()
+            );
+
+            z = mathValue(
+                    animationKeys.getFirst().getZ(),
+                    animationKeys.getLast().getZ(),
+                    tick,
+                    animationKeys.getFirst().getTick(),
+                    animationKeys.getLast().getTick()
+            );
+        }
+
+        bone.setAnimScale(x, y, z);
     }
 
     private void translateTick(Bone bone, int tick) {

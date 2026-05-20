@@ -79,9 +79,9 @@ public class Bone {
         this.animRotationY = 0;
         this.animRotationZ = 0;
 
-        this.animScaleX = 1 * 2;
-        this.animScaleY = 1 * 2;
-        this.animScaleZ = 1 * 2;
+        this.animScaleX = 1;
+        this.animScaleY = 1;
+        this.animScaleZ = 1;
 
         this.name = name;
 
@@ -90,6 +90,12 @@ public class Bone {
         this.group = group;
 
         this.modelName = modelName;
+    }
+
+    public void setAnimScale(float x, float y, float z){
+        this.animScaleX = x;
+        this.animScaleY = y;
+        this.animScaleZ = z;
     }
 
     public void setNewOrigin(Vector3f newOrigin) {
