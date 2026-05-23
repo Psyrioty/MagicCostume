@@ -64,5 +64,14 @@
             <version>1.21.11-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
+
+
+        <dependency>
+            <groupId>org.psyrioty</groupId>
+            <artifactId>MagicModels</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/libs/MagicModels-1.0-SNAPSHOT.jar</systemPath>
+        </dependency>
     </dependencies>
 </project>

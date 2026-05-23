@@ -6,8 +6,8 @@ api-version: '1.21.11'
 load: POSTWORLD
 
 commands:
-  magiccostume:
+  costume:
     description: MagicCostume plugin commands
-    usage: /magiccostume
-    permission: magiccostume.admin
+    usage: /costume
+    permission: group.default
     permission-message: "Not permission"
