@@ -1,11 +1,11 @@
 package org.psyrioty.magicCostume.Objects;
 
+import org.psyrioty.magicCostume.MagicCostume;
 import org.psyrioty.magicModels.Objects.ActiveModel;
 import org.psyrioty.magicModels.Objects.Target.ActiveEntity;
 
 public class ActiveCostume {
     Costume costume;
-    Slot slot;
     ActiveSlot activeSlot;
     ActiveCostumeEntity activeCostumeEntity;
     ActiveModel activeModel;
@@ -19,14 +19,10 @@ public class ActiveCostume {
 
     public ActiveCostume(
             Costume costume,
-            Slot slot,
-
-            ActiveSlot activeSlot,
-            ActiveCostumeEntity activeCostumeEntity,
             ActiveModel activeModel
     ){
         this.costume = costume;
-        this.slot = slot;
+        this.activeModel = activeModel;
 
         //не забыть дописать
     }

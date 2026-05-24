@@ -9,18 +9,27 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import org.psyrioty.magicCostume.MagicCostume;
-import org.psyrioty.magicCostume.Objects.Costume;
-import org.psyrioty.magicCostume.Objects.Slot;
+import org.psyrioty.magicCostume.Objects.*;
 import org.psyrioty.magicCostume.utils.ConfigLanguage;
-import org.psyrioty.magicModels.MagicModels;
-
-import java.nio.Buffer;
 
 import static org.psyrioty.magicCostume.utils.ConfigLanguage.*;
 
 public class CostumeMenu implements InventoryHolder {
     Inventory inventory;
     Costume costume;
+
+    //=============данные для настройки костюмов================
+    //смещения
+    double offsetX = 0;
+    double offsetY = 0;
+    double offsetZ = 0;
+
+    //размер
+    double scale = 1;
+
+    //яркость
+    int brightness = 0;
+    //----------------------------------------------------------
 
     public CostumeMenu(Player player, Costume costume){
         this.costume = costume;
@@ -79,9 +88,8 @@ public class CostumeMenu implements InventoryHolder {
     }
 
     public void click(Player player, int slot){
-        if(slot == 22){
-            Bukkit.getLogger().info(costume.getId());
-            MagicModels.getPlugin().spawnModel(player, costume.getModel().getName());
+        if(slot == 22) {
+            MagicCostume.getPlugin().spawnActiveCostume(player, costume);
         }
     }
 
