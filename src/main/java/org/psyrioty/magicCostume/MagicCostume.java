@@ -68,7 +68,17 @@ public final class MagicCostume extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
+        for(CostumeMenu costumeMenu: activeCostumeMenus){
+            costumeMenu.getInventory().close();
+        }
+
+        for(MainMenu mainMenu: activeMainMenus){
+            mainMenu.getInventory().close();
+        }
+
+        for(SlotMenu slotMenu: activeSlotMenus){
+            slotMenu.getInventory().close();
+        }
     }
 
     public static MagicCostume getPlugin() {
@@ -177,8 +187,25 @@ public final class MagicCostume extends JavaPlugin {
         return null;
     }
 
-    public ActiveCostume spawnActiveCostume(Entity entity, Costume costume){
-        ActiveModel activeModel = MagicModels.getPlugin().spawnModel(entity, costume.getModel().getName());
+    public ActiveCostume spawnActiveCostume(
+            Entity entity,
+            Costume costume,
+            HashMap<UUID, Integer> boneBrightness,
+            float scale,
+            float offsetX,
+            float offsetY,
+            float offsetZ
+    ){
+        ActiveModel activeModel = MagicModels.getPlugin().spawnModel(
+                entity,
+                costume.getModel(),
+                boneBrightness,
+                scale,
+                offsetX,
+                offsetY,
+                offsetZ
+        );
+
         ActiveCostume activeCostume = new ActiveCostume(
                 costume,
                 activeModel

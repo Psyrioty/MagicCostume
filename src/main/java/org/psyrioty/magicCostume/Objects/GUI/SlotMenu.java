@@ -86,7 +86,6 @@ public class SlotMenu implements InventoryHolder {
     }
 
     public void click(Player player, int slot){
-
         List<Costume> costumes = this.slot.getCostumes();
         if(costumes.isEmpty() && slot != 42){
             return;
