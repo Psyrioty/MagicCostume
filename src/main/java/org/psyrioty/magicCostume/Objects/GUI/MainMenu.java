@@ -9,20 +9,28 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import org.psyrioty.magicCostume.MagicCostume;
+import org.psyrioty.magicCostume.Objects.ActiveCostumeEntity;
 import org.psyrioty.magicCostume.Objects.Slot;
 import org.psyrioty.magicCostume.utils.ConfigLanguage;
 
 import java.util.List;
 
+import static org.psyrioty.magicCostume.utils.ConfigLanguage.getHideAllCostumesButtonName;
 import static org.psyrioty.magicCostume.utils.ConfigLanguage.getMainMenuInfo;
 
 public class MainMenu implements InventoryHolder {
     Inventory inventory;
     List<Slot> slotList;
+    ActiveCostumeEntity activeCostumeEntity;
 
     public MainMenu(Player player){
+        activeCostumeEntity = MagicCostume.getPlugin().findActiveCostumeEntityForEntity(player);
+        if(activeCostumeEntity == null){
+            return;
+        }
         slotList = MagicCostume.getPlugin().getSlots();
         open(player);
+
 
         MagicCostume.getPlugin().getActiveMainMenus().add(this);
     }
@@ -62,6 +70,9 @@ public class MainMenu implements InventoryHolder {
         }
 
         for(int i = 45; i < 54; i++){
+            if(i == 49){
+                continue;
+            }
             inventory.setItem(i, emptySlot);
         }
 
@@ -83,11 +94,33 @@ public class MainMenu implements InventoryHolder {
 
             slotIterator++;
         }
+
+        //реализация кнопки для скрытия всех костюмов других игроков
+        ItemStack hideAllCostumesButton = new ItemStack(Material.STRUCTURE_VOID);
+        ItemMeta hideAllCostumesButtonMeta = hideAllCostumesButton.getItemMeta();
+        if(activeCostumeEntity.isHideOtherCostumes()){
+            hideAllCostumesButtonMeta.setEnchantmentGlintOverride(activeCostumeEntity.isHideOtherCostumes());
+        }
+
+        hideAllCostumesButtonMeta.setDisplayName(getHideAllCostumesButtonName());
+        hideAllCostumesButton.setItemMeta(hideAllCostumesButtonMeta);
+        inventory.setItem(49, hideAllCostumesButton);
     }
 
     public void click(Player player, int slot){
-        if(slotList.isEmpty() && slot != 42){
-            return;
+        switch (slot){
+            case 49:
+                if(activeCostumeEntity == null){
+                    return;
+                }
+                boolean hideOtherCostumes = !activeCostumeEntity.isHideOtherCostumes();
+                activeCostumeEntity.setHideOtherCostumes(hideOtherCostumes);
+
+                ItemStack item = inventory.getItem(slot);
+                ItemMeta meta = item.getItemMeta();
+                meta.setEnchantmentGlintOverride(hideOtherCostumes);
+                item.setItemMeta(meta);
+                return;
         }
 
         if(

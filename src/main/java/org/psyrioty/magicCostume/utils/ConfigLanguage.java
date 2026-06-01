@@ -140,4 +140,12 @@ public class ConfigLanguage {
 
         return lore;
     }
+
+    public static String getHideAllCostumesButtonName(){
+        return "Скрыть все костюмы";
+    }
+
+    public static String getDeleteCostumeButtonName(){
+        return "Убрать костюм";
+    }
 }

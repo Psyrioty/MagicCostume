@@ -8,18 +8,23 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
+import org.psyrioty.magicCostume.Database.DatabaseManager;
 import org.psyrioty.magicCostume.MagicCostume;
-import org.psyrioty.magicCostume.Objects.Costume;
-import org.psyrioty.magicCostume.Objects.Slot;
+import org.psyrioty.magicCostume.Objects.*;
 import org.psyrioty.magicCostume.utils.ConfigLanguage;
 
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
+import static org.psyrioty.magicCostume.Database.Requests.deleteCostumePartByEntityUUIDAndSlotName;
 import static org.psyrioty.magicCostume.utils.ConfigLanguage.*;
 
 public class SlotMenu implements InventoryHolder {
     Inventory inventory;
     Slot slot;
+
+    List<Costume> trueCostumes = new ArrayList<>();
 
     public SlotMenu(
             Player player,
@@ -27,7 +32,7 @@ public class SlotMenu implements InventoryHolder {
     ){
         this.slot = slot;
 
-        createInventory();
+        createInventory(player);
         open(player);
 
         MagicCostume.getPlugin().getActiveSlotMenus().add(this);
@@ -45,7 +50,7 @@ public class SlotMenu implements InventoryHolder {
         player.openInventory(inventory);
     }
 
-    private void createInventory(){
+    private void createInventory(Player player){
         inventory = Bukkit.getServer().createInventory(this, 54, ConfigLanguage.getMainName());
 
         ItemStack emptySlot = new ItemStack(Material.RED_STAINED_GLASS_PANE);
@@ -61,6 +66,9 @@ public class SlotMenu implements InventoryHolder {
         }
 
         for(int i = 45; i < 54; i++){
+            if(i == 49){
+                continue;
+            }
             inventory.setItem(i, emptySlot);
         }
 
@@ -74,6 +82,9 @@ public class SlotMenu implements InventoryHolder {
 
         int slotIterator = 9;
         for(Costume costume: slot.getCostumes()){
+            if(!player.hasPermission(costume.getPermission())){
+                continue;
+            }
             ItemStack slotItem = new ItemStack(Material.PAPER);
             ItemMeta slotMeta = slotItem.getItemMeta();
             slotMeta.setDisplayName(costume.getName());
@@ -81,21 +92,51 @@ public class SlotMenu implements InventoryHolder {
 
             inventory.setItem(slotIterator, slotItem);
 
+            trueCostumes.add(costume);
+
             slotIterator++;
         }
+
+        //----------УДАЛЕНИЕ КОСТЮМА--------------
+        ItemStack deleteButton = new ItemStack(Material.STRUCTURE_VOID);
+        ItemMeta deleteMeta = deleteButton.getItemMeta();
+        deleteMeta.setDisplayName(getDeleteCostumeButtonName());
+        deleteButton.setItemMeta(deleteMeta);
+        inventory.setItem(49, deleteButton);
+        //========================================
     }
 
-    public void click(Player player, int slot){
+    public void click(Player player, int slot) throws SQLException {
         List<Costume> costumes = this.slot.getCostumes();
-        if(costumes.isEmpty() && slot != 42){
-            return;
-        }
-
         if(
                 8 < slot &&
                 slot <= 8 + costumes.size()
         ){
-            CostumeMenu costumeMenu = new CostumeMenu(player, costumes.get(slot - 9));
+            CostumeMenu costumeMenu = new CostumeMenu(player, trueCostumes.get(slot - 9));
+        }else{
+            switch (slot){
+                case 49:
+                    ActiveCostumeEntity activeCostumeEntity = MagicCostume.getPlugin().findActiveCostumeEntityForEntity(player);
+                    if(activeCostumeEntity == null){
+                        return;
+                    }
+
+                    for(ActiveSlot activeSlot: activeCostumeEntity.getActiveSlotList()){
+                        if(activeSlot.getSlot().equals(this.slot)){
+                            ActiveCostume activeCostume = activeSlot.getActiveCostume();
+                            if(activeCostume == null){
+                                return;
+                            }
+                            activeCostume.remove();
+                            deleteCostumePartByEntityUUIDAndSlotName(
+                                    DatabaseManager.getConnection(),
+                                    player.getUniqueId().toString(),
+                                    this.slot.getName()
+                                    );
+                        }
+                    }
+                    break;
+            }
         }
     }
 

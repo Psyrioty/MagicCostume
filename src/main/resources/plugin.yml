@@ -4,7 +4,7 @@ version: '${version}'
 main: org.psyrioty.magicCostume.MagicCostume
 api-version: '1.21.11'
 load: POSTWORLD
-softdepend: [MagicModels]
+softdepend: [MagicModels, MythicDungeons]
 
 commands:
   costume:

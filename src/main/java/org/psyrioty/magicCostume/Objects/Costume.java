@@ -12,12 +12,18 @@ public class Costume {
     String id;
     String name;
 
+    boolean headModel;
+
+    String permission;
+
     public Costume(
             String id,
             double offsetX, double offsetY, double offsetZ,
             Model model,
             Slot slot,
-            String name
+            String name,
+            boolean headModel,
+            String permission
     ){
         this.offsetX = offsetX;
         this.offsetY = offsetY;
@@ -30,6 +36,14 @@ public class Costume {
         this.name = name;
 
         this.id = id;
+
+        this.headModel = headModel;
+
+        if(permission != null) {
+            this.permission = permission;
+        }else{
+            permission = "group.default";
+        }
     }
 
     public Slot getSlot() {
@@ -56,7 +70,15 @@ public class Costume {
         return name;
     }
 
+    public boolean isHeadModel() {
+        return headModel;
+    }
+
     public String getId() {
         return id;
+    }
+
+    public String getPermission() {
+        return permission;
     }
 }

@@ -13,11 +13,12 @@ import org.psyrioty.magicCostume.Objects.GUI.CostumeMenu;
 import org.psyrioty.magicCostume.Objects.GUI.MainMenu;
 import org.psyrioty.magicCostume.Objects.GUI.SlotMenu;
 
+import java.sql.SQLException;
 import java.util.List;
 
 public class GUIEvents implements Listener {
     @EventHandler
-    private void onClick(InventoryClickEvent event){
+    private void onClick(InventoryClickEvent event) throws SQLException {
         Inventory inventory = event.getInventory();
         if(isGUI(inventory)){
             event.setCancelled(true);

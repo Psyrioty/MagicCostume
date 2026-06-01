@@ -8,15 +8,19 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
+import org.psyrioty.magicCostume.Database.DatabaseManager;
 import org.psyrioty.magicCostume.MagicCostume;
 import org.psyrioty.magicCostume.Objects.*;
 import org.psyrioty.magicCostume.utils.ConfigLanguage;
 import org.psyrioty.magicModels.Objects.Bone;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
+import static org.psyrioty.magicCostume.Database.Requests.*;
 import static org.psyrioty.magicCostume.utils.ConfigLanguage.*;
 
 public class CostumeMenu implements InventoryHolder {
@@ -224,32 +228,16 @@ public class CostumeMenu implements InventoryHolder {
         //==========================================================
     }
 
-    private HashMap<UUID, Integer> setAllBoneBrightness(List<Bone> bones, HashMap<UUID, Integer> boneBrightness){
-        if(boneBrightness == null) {
-            boneBrightness = new HashMap<>();
-        }
-
-        if(bones == null){
-            return boneBrightness;
-        }
-
-        for(Bone bone: bones){
-            boneBrightness.put(bone.getUuid(), brightness);
-
-            setAllBoneBrightness(bone.getChildBones(), boneBrightness);
-        }
-
-        return boneBrightness;
-    }
-
     public void click(Player player, int slot){
         switch (slot){
             //спавн костюма
             case 22:
 
-                HashMap<UUID, Integer> boneBrightness = setAllBoneBrightness(
+                HashMap<UUID, Integer> boneBrightness = MagicCostume.getPlugin().setAllBoneBrightness(
                         costume.getModel().getHeadBones(),
-                        null);
+                        null,
+                        brightness
+                );
 
                 MagicCostume.getPlugin().spawnActiveCostume(
                         player,
@@ -258,8 +246,11 @@ public class CostumeMenu implements InventoryHolder {
                         scale,
                         offsetX,
                         offsetY,
-                        offsetZ
+                        offsetZ,
+                        costume.isHeadModel()
                 );
+
+                insertDB(player);
                 break;
             //+размер
             case 11:
@@ -386,6 +377,62 @@ public class CostumeMenu implements InventoryHolder {
         ItemMeta meta1 = itemStack1.getItemMeta();
         meta1.setDisplayName(getCostumeMenuMinusBrightnessButton(brightness));
         itemStack1.setItemMeta(meta);
+    }
+
+    private void insertDB(Player player){
+        ActiveCostumeEntity activeCostumeEntity = MagicCostume.getPlugin().findActiveCostumeEntityForEntity(player);
+        if(activeCostumeEntity == null){
+            return;
+        }
+        Connection connection = DatabaseManager.getConnection();
+        int idActiveCostumeEntity = -1;
+        for(ActiveSlot activeSlot: activeCostumeEntity.getActiveSlotList()){
+            ActiveCostume activeCostume = activeSlot.getActiveCostume();
+
+            if(activeCostume == null){
+                continue;
+            }
+
+            if(idActiveCostumeEntity == -1) {
+                try {
+                    idActiveCostumeEntity = getOrCreateCostumeEntityId(connection, activeCostumeEntity.getEntity().getUniqueId().toString(), activeCostumeEntity.isHideOtherCostumes());
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            int idActiveSlot = -1;
+
+            try {
+                idActiveSlot = getOrCreateSlotId(connection, activeSlot.getSlot().getName(), idActiveCostumeEntity);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+
+            HashMap<UUID, Integer> brightnessList = activeCostume.getBrightness();
+            int brightness = -1;
+            if(brightnessList != null){
+                for(UUID uuid: brightnessList.keySet()){
+                    brightness = brightnessList.get(uuid);
+                    break;
+                }
+            }
+
+            try {
+                getOrCreateCostumePart(
+                        connection,
+                        activeCostume.getCostume().getId(),
+                        activeCostume.getScale(),
+                        brightness,
+                        activeCostume.getOffsetX(),
+                        activeCostume.getOffsetY(),
+                        activeCostume.getOffsetZ(),
+                        idActiveSlot
+                );
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     private void renameOffsetX(){
