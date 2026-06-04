@@ -125,7 +125,7 @@ public final class MagicCostume extends JavaPlugin {
         return costumes;
     }
 
-    private void getCostumeFiles(){
+    public void getCostumeFiles(){
         File costumesFolder = new File(plugin.getDataFolder(), "Costumes");
 
         if (!costumesFolder.exists()) {
@@ -139,14 +139,18 @@ public final class MagicCostume extends JavaPlugin {
                 String id = file.getName().replace(".yml", "");
 
                 YamlConfiguration yamlConfiguration = YamlConfiguration.loadConfiguration(file);
-                double offsetX = yamlConfiguration.getDouble("offset.X");
-                double offsetY = yamlConfiguration.getDouble("offset.Y");
-                double offsetZ = yamlConfiguration.getDouble("offset.Z");
+                double offsetX = yamlConfiguration.getDouble("offset.x");
+                double offsetY = yamlConfiguration.getDouble("offset.y");
+                double offsetZ = yamlConfiguration.getDouble("offset.z");
                 String slotName = yamlConfiguration.getString("slotName");
                 String modelName = yamlConfiguration.getString("model");
                 String name = yamlConfiguration.getString("name");
                 boolean isHeadModel = yamlConfiguration.getBoolean("isHeadModel");
                 String permission = yamlConfiguration.getString("permission");
+                double scale = yamlConfiguration.getDouble("scale");
+                if(scale == 0){
+                    scale = 1;
+                }
 
                 if(slotName == null || modelName == null){
                     continue;
@@ -178,19 +182,40 @@ public final class MagicCostume extends JavaPlugin {
                     slots.add(slotCostume);
                 }
 
-                Costume costume = new Costume(
-                        id,
-                        offsetX, offsetY, offsetZ,
-                        modelCostume,
-                        slotCostume,
-                        name,
-                        isHeadModel,
-                        permission
-                );
+                Costume costume = null;
 
-                slotCostume.addCostume(costume);
+                for(Costume costumeOld: costumes){
+                    if(costumeOld.getId().equals(id)){
+                        costume = costumeOld;
+                        costume.setOffsetX(offsetX);
+                        costume.setOffsetY(offsetY);
+                        costume.setOffsetZ(offsetZ);
+                        costume.setName(name);
+                        costume.setSlot(slotCostume);
+                        costume.setHeadModel(isHeadModel);
+                        costume.setPermission(permission);
+                        costume.setScale(scale);
 
-                costumes.add(costume);
+                        break;
+                    }
+                }
+
+                if(costume == null) {
+                    costume = new Costume(
+                            id,
+                            offsetX, offsetY, offsetZ,
+                            modelCostume,
+                            slotCostume,
+                            name,
+                            isHeadModel,
+                            permission,
+                            scale
+                    );
+
+                    slotCostume.addCostume(costume);
+
+                    costumes.add(costume);
+                }
             }catch (Exception exception){
                 Bukkit.getLogger().severe("MagicCostume error in MagicCostume.java getCostumeFiles() " + file.getName() + " " + exception.getMessage());
             }
@@ -238,16 +263,14 @@ public final class MagicCostume extends JavaPlugin {
 
             boolean headModel
     ){
-
-
         ActiveModel activeModel = MagicModels.getPlugin().spawnModel(
                 entity,
                 costume.getModel(),
                 boneBrightness,
-                scale,
-                offsetX,
-                offsetY,
-                offsetZ
+                scale * (float) costume.getScale(),
+                offsetX + (float) costume.getOffsetX(),
+                offsetY + (float) costume.getOffsetY(),
+                offsetZ + (float) costume.getOffsetZ()
         );
 
         if(headModel){

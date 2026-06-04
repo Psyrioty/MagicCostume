@@ -86,14 +86,15 @@ public class MythicDungeonEvents implements Listener {
                                 brightness
                         );
 
+
                         MagicCostume.getPlugin().spawnActiveCostume(
                                 player,
                                 cost,
                                 boneBrightness,
                                 (float) scale,
-                                (float) offsetX,
-                                (float) offsetY,
-                                (float) offsetZ,
+                                (float) offsetX + (float) cost.getOffsetX(),
+                                (float) offsetY + (float) cost.getOffsetY(),
+                                (float) offsetZ + (float) cost.getOffsetZ(),
                                 isHead
                         );
                     }

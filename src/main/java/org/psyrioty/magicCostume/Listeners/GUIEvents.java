@@ -47,6 +47,7 @@ public class GUIEvents implements Listener {
 
         if(costumeMenu != null){
             costumeMenu.click((Player) event.getWhoClicked(), event.getSlot());
+            return;
         }
     }
 

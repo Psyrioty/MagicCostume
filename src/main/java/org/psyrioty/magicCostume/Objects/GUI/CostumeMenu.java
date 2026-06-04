@@ -239,18 +239,18 @@ public class CostumeMenu implements InventoryHolder {
                         brightness
                 );
 
-                MagicCostume.getPlugin().spawnActiveCostume(
+                ActiveCostume activeCostume = MagicCostume.getPlugin().spawnActiveCostume(
                         player,
                         costume,
                         boneBrightness,
-                        scale,
-                        offsetX,
-                        offsetY,
-                        offsetZ,
+                        scale * (float) costume.getScale(),
+                        offsetX + (float) costume.getOffsetX(),
+                        offsetY + (float) costume.getOffsetY(),
+                        offsetZ + (float) costume.getOffsetZ(),
                         costume.isHeadModel()
                 );
 
-                insertDB(player);
+                insertDB(player, activeCostume);
                 break;
             //+размер
             case 11:
@@ -379,7 +379,7 @@ public class CostumeMenu implements InventoryHolder {
         itemStack1.setItemMeta(meta);
     }
 
-    private void insertDB(Player player){
+    private void insertDB(Player player, ActiveCostume activeCostume){
         ActiveCostumeEntity activeCostumeEntity = MagicCostume.getPlugin().findActiveCostumeEntityForEntity(player);
         if(activeCostumeEntity == null){
             return;
@@ -387,9 +387,10 @@ public class CostumeMenu implements InventoryHolder {
         Connection connection = DatabaseManager.getConnection();
         int idActiveCostumeEntity = -1;
         for(ActiveSlot activeSlot: activeCostumeEntity.getActiveSlotList()){
-            ActiveCostume activeCostume = activeSlot.getActiveCostume();
-
             if(activeCostume == null){
+                continue;
+            }
+            if(activeCostume != activeSlot.getActiveCostume()){
                 continue;
             }
 

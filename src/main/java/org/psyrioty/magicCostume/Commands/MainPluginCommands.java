@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.psyrioty.magicCostume.MagicCostume;
 import org.psyrioty.magicCostume.Objects.GUI.CostumeMenu;
 import org.psyrioty.magicCostume.Objects.GUI.MainMenu;
+import org.psyrioty.magicModels.utils.Converter;
 
 import java.util.Set;
 
@@ -20,6 +21,13 @@ public class MainPluginCommands implements CommandExecutor {
         if(!(sender instanceof Player player)){
             sender.sendMessage(getCommandError());
             return true;
+        }
+
+        if(args.length == 1) {
+            if (args[0].equals("reload")) {
+                MagicCostume.getPlugin().getCostumeFiles();
+                return true;
+            }
         }
 
         if(MagicCostume.getPlugin().getCostumes().isEmpty()){

@@ -41,6 +41,22 @@ public class Requests {
         }
     }
 
+    public static Boolean getHideOtherCostumesByUUID(Connection connection, String uuid) throws SQLException {
+        String sql = "SELECT hideOtherCostumes FROM CostumeEntity WHERE uuid = ?";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, uuid);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("hideOtherCostumes") != 0;
+                }
+            }
+        }
+
+        return null;
+    }
+
     public static Integer findCostumeEntityIdByUUID(Connection connection, String uuid) throws SQLException {
         String sql = "SELECT id FROM CostumeEntity WHERE uuid = ?";
 

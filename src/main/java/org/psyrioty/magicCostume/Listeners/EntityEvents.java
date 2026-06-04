@@ -40,8 +40,25 @@ public class EntityEvents implements Listener {
             activeCostumeEntityNew = new ActiveCostumeEntity(player);
         }
 
+        ActiveCostumeEntity finalActiveCostumeEntityNew = activeCostumeEntityNew;
         Bukkit.getScheduler().runTaskAsynchronously(MagicCostume.getPlugin(), () -> {
             Connection connection = DatabaseManager.getConnection();
+            Boolean hideOtherCostumes = null;
+            try {
+                hideOtherCostumes = Requests.getHideOtherCostumesByUUID(connection, player.getUniqueId().toString());
+                if(hideOtherCostumes != null){
+                    if(hideOtherCostumes){
+                        finalActiveCostumeEntityNew.setHideOtherCostumes(true);
+                    }
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+
+            if (hideOtherCostumes != null && hideOtherCostumes) {
+                // скрывать другие костюмы
+            }
+
             try (PreparedStatement ps = Requests.selectCostumePartsByEntityUUID(connection, player.getUniqueId().toString());
                  ResultSet rs = ps.executeQuery()) {
 
