@@ -58,7 +58,8 @@ public class EntityEvents implements Listener {
             Bukkit.getScheduler().runTaskAsynchronously(MagicCostume.getPlugin(), () -> {
                 Connection connection = DatabaseManager.getConnection();
                 try (PreparedStatement ps = Requests.selectCostumePartsByEntityUUID(connection, player.getUniqueId().toString());
-                     ResultSet rs = ps.executeQuery()) {
+                     ResultSet rs = ps.executeQuery()
+                ) {
 
                     while (rs.next()) {
                         int id = rs.getInt("id");
@@ -86,15 +87,14 @@ public class EntityEvents implements Listener {
                                 brightness
                         );
 
-
                         MagicCostume.getPlugin().spawnActiveCostume(
                                 player,
                                 cost,
                                 boneBrightness,
                                 (float) scale,
-                                (float) offsetX + (float) cost.getOffsetX(),
-                                (float) offsetY + (float) cost.getOffsetY(),
-                                (float) offsetZ + (float) cost.getOffsetZ(),
+                                (float) offsetX,
+                                (float) offsetY,
+                                (float) offsetZ,
                                 isHead
                         );
                     }
@@ -163,15 +163,14 @@ public class EntityEvents implements Listener {
                                 brightness
                         );
 
-
                         MagicCostume.getPlugin().spawnActiveCostume(
                                 player,
                                 cost,
                                 boneBrightness,
                                 (float) scale,
-                                (float) offsetX + (float) cost.getOffsetX(),
-                                (float) offsetY + (float) cost.getOffsetY(),
-                                (float) offsetZ + (float) cost.getOffsetZ(),
+                                (float) offsetX,
+                                (float) offsetY,
+                                (float) offsetZ,
                                 isHead
                         );
                     }
