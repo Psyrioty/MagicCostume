@@ -17,6 +17,8 @@ public class ActiveCostumeEntity {
 
     HashMap<Costume, HashMap<UUID, Integer>> brightnessCostumes = new HashMap<>();
 
+    boolean remake = false; //для проверки при пересоздании, чтобы не спамились
+
     boolean hideOtherCostumes = false;
 
     public ActiveCostumeEntity(Entity entity){
@@ -30,6 +32,14 @@ public class ActiveCostumeEntity {
         }
 
         MagicCostume.getPlugin().getActiveCostumeEntities().add(this);
+    }
+
+    public void setRemake(boolean remake) {
+        this.remake = remake;
+    }
+
+    public boolean isRemake() {
+        return remake;
     }
 
     public Entity getEntity() {

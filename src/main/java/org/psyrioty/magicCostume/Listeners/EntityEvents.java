@@ -46,6 +46,12 @@ public class EntityEvents implements Listener {
             return;
         }
 
+        if(activeCostumeEntity.isRemake()){
+            return;
+        }
+
+        activeCostumeEntity.setRemake(true);
+
         for(ActiveSlot activeSlot: activeCostumeEntity.getActiveSlotList()){
             ActiveCostume activeCostume = activeSlot.getActiveCostume();
             if(activeCostume == null){
@@ -102,7 +108,8 @@ public class EntityEvents implements Listener {
                     throw new RuntimeException(e);
                 }
             });
-        }, 1L);
+            activeCostumeEntity.setRemake(false);
+        }, 5L);
 
         for(ActiveSlot activeSlot: activeCostumeEntity.getActiveSlotList()){
             ActiveCostume activeCostume = activeSlot.getActiveCostume();
@@ -121,7 +128,11 @@ public class EntityEvents implements Listener {
             return;
         }
 
-        Bukkit.getLogger().info(event.getEventName());
+        if(activeCostumeEntity.isRemake()){
+            return;
+        }
+
+        activeCostumeEntity.setRemake(true);
 
         for(ActiveSlot activeSlot: activeCostumeEntity.getActiveSlotList()){
             ActiveCostume activeCostume = activeSlot.getActiveCostume();
@@ -177,16 +188,9 @@ public class EntityEvents implements Listener {
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
                 }
+                activeCostumeEntity.setRemake(false);
             });
-        }, 1L);
-
-        for(ActiveSlot activeSlot: activeCostumeEntity.getActiveSlotList()){
-            ActiveCostume activeCostume = activeSlot.getActiveCostume();
-            if(activeCostume == null){
-                continue;
-            }
-            activeCostume.remove();
-        }
+        }, 5L);
     }
 
     @EventHandler

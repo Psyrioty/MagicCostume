@@ -42,6 +42,10 @@ public class MythicDungeonEvents implements Listener {
             return;
         }
 
+        if(activeCostumeEntity.isRemake()){
+            return;
+        }
+
         for(ActiveSlot activeSlot: activeCostumeEntity.getActiveSlotList()){
             ActiveCostume activeCostume = activeSlot.getActiveCostume();
             if(activeCostume == null){
@@ -58,6 +62,21 @@ public class MythicDungeonEvents implements Listener {
         if(activeCostumeEntity == null){
             return;
         }
+
+        if(activeCostumeEntity.isRemake()){
+            return;
+        }
+
+        for(ActiveSlot activeSlot: activeCostumeEntity.getActiveSlotList()){
+            ActiveCostume activeCostume = activeSlot.getActiveCostume();
+            if(activeCostume == null){
+                continue;
+            }
+            activeCostume.remove();
+        }
+
+        activeCostumeEntity.setRemake(true);
+
         Bukkit.getScheduler().runTaskLater(MagicCostume.getPlugin(), () -> {
             Bukkit.getScheduler().runTaskAsynchronously(MagicCostume.getPlugin(), () -> {
                 Connection connection = DatabaseManager.getConnection();
@@ -102,6 +121,8 @@ public class MythicDungeonEvents implements Listener {
                                 isHead
                         );
                     }
+
+                    activeCostumeEntity.setRemake(false);
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
                 }
